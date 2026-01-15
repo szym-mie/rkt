@@ -1,0 +1,22 @@
+{
+    "name": "decoupa",
+    "info": "",
+    "type": "decoup",
+    "mass": 0.4,
+    "geom": {
+        "tapers": [{
+            "texture": "decoupa.png",
+            "rings": 16,
+            "upper": { "offset": 0.2, "radius": 1.0 },
+            "lower": { "offset": -0.2, "radius": 1.0 }
+        }],
+        "planes": []
+    },
+    "attach": {
+        "upper": [0.0, 0.0, 0.2],
+        "lower": [0.0, 0.0, -0.2]
+    },
+    "decoup": {
+        "force": 100.0
+    }
+}

@@ -1,0 +1,37 @@
+{
+    "name": "solid2",
+    "info": "",
+    "type": "engine",
+    "mass": 1000.0,
+    "geom": {
+        "tapers": [{
+            "texture": "solid2.png",
+            "rings": 16,
+            "upper": { "offset": 2.0, "radius": 1.0 },
+            "lower": { "offset": -2.0, "radius": 1.0 }
+        }, {
+            "texture": "nozzlea.png",
+            "rings": 16,
+            "upper": { "offset": -2.0, "radius": 0.6 },
+            "lower": { "offset": -2.4, "radius": 0.8 }
+        }],
+        "planes": []
+    },
+    "attach": {
+        "upper": [0.0, 0.0, 2.0],
+        "lower": [0.0, 0.0, -2.4]
+    },
+    "engine": {
+        "fuel": {
+            "mass": 8000.0,
+            "impulse": 205.0,
+            "flow": 1000.0
+        },
+        "plume": {
+            "texture": "plume1.png",
+            "offset": [0.0, 0.0, -2.0],
+            "size": 1.0
+        },
+        "can_shutdown": false
+    }
+}
