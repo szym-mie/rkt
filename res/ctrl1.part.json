@@ -3,10 +3,10 @@
     "info": "",
     "type": "ctrl",
     "mass": 3.0,
-    "geom": {
+    "body": {
         "tapers": [{
-            "texture": "ctrl1.png",
-            "rings": 16,
+            "texture": "res/ctrl1.png",
+            "rings": 12,
             "upper": { "offset": 1.0, "radius": 0.4 },
             "lower": { "offset": -1.0, "radius": 1.0 }
         }],

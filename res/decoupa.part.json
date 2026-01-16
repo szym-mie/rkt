@@ -3,11 +3,11 @@
     "info": "",
     "type": "decoup",
     "mass": 0.4,
-    "geom": {
+    "body": {
         "tapers": [{
-            "texture": "decoupa.png",
-            "rings": 16,
-            "upper": { "offset": 0.2, "radius": 1.0 },
+            "texture": "res/decoupa.png",
+            "rings": 12,
+            "upper": { "offset": 0.8, "radius": 1.0 },
             "lower": { "offset": -0.2, "radius": 1.0 }
         }],
         "planes": []
