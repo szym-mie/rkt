@@ -30,8 +30,6 @@ func NewVehicle(name string, partTree *PartNode) *Vehicle {
 }
 
 func (v *Vehicle) Draw() {
-	gl.MatrixMode(gl.MODELVIEW)
-	gl.LoadIdentity()
 	v.Pos.apply()
 	v.Rot.apply()
 	node := v.PartTree
@@ -77,15 +75,16 @@ func NewPartNode(part Part) *PartNode {
 	return n
 }
 
-func (n *PartNode) AttachBelow(part Part) {
+func (n *PartNode) AttachBelow(part Part) *PartNode {
 	p := NewPartNode(part)
 	// link both parts
 	n.Lower = p
 	p.Upper = n
 	// calculate offset based on attachment points (height only for now)
-	_, tAttachPt := part.getAttachPts()
+	_, nAttachPt := n.Part.getAttachPts()
 	pAttachPt, _ := part.getAttachPts()
-	p.Offset.z = n.Offset.z + tAttachPt.z + pAttachPt.z
+	p.Offset.z = n.Offset.z + nAttachPt.z - pAttachPt.z
+	return p
 }
 
 type PartCtrl struct {

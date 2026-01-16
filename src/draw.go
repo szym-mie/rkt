@@ -55,8 +55,8 @@ func (g *Geom) draw() {
 	for i := range g.count {
 		v := g.vertices[i]
 		t := g.texCoords[i]
-		gl.Vertex3f(v.x, v.y, v.z)
 		gl.TexCoord2f(t.x, t.y)
+		gl.Vertex3f(v.x, v.y, v.z)
 	}
 
 	gl.End()

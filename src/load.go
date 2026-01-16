@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/draw"
 	"log"
+	"math"
 	"os"
 
 	"github.com/go-gl/gl/v2.1/gl"
@@ -45,10 +46,10 @@ func loadTexture(filename string) Texture {
 	gl.GenTextures(1, &handle)
 	texture := Texture(handle)
 	texture.bind()
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.MIRRORED_REPEAT)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT)
 	gl.TexImage2D(
 		gl.TEXTURE_2D,
 		0,
@@ -75,12 +76,95 @@ type TaperDef struct {
 	Lower       TaperEndDef `json:"lower"`
 }
 
+func buildRingVertices(ringCount uint16, radius, z float32) []Vec3 {
+	ringVts := make([]Vec3, ringCount)
+	for i := range ringCount {
+		d := float64(i) / float64(ringCount)
+		a := d * 2 * math.Pi
+		x := radius * float32(math.Cos(a))
+		y := radius * float32(math.Sin(a))
+		ringVts[i] = Vec3{x, y, z}
+	}
+
+	return ringVts
+}
+
+func buildRingEndTexCoords(ringCount uint16, pageX uint8) []Vec2 {
+	ringTCs := make([]Vec2, ringCount)
+	for i := range ringCount {
+		d := float64(i) / float64(ringCount)
+		a := d * 2 * math.Pi
+		x := float32(math.Cos(a))*0.25 + 0.25
+		y := float32(math.Sin(a))*0.25 + 0.25
+		ringTCs[i] = Vec2{x + float32(pageX)*0.5, y}
+	}
+
+	return ringTCs
+}
+
+func buildRingSideTexCoords(ringCount uint16, pageY uint8) []Vec2 {
+	sideTCs := make([]Vec2, ringCount)
+	for i := range ringCount {
+		x := float32(i) / float32(ringCount) * 2.0
+		y := float32(pageY) * 0.5
+		sideTCs[i] = Vec2{x, y}
+	}
+
+	return sideTCs
+}
+
 func (d *TaperDef) buildGeom() *Geom {
 	g := new(Geom)
+	rc := d.RingCount
 	g.texture = loadTexture(d.TextureName)
-	g.count = 24 * uint32(d.RingCount)
+	endCount := rc * 3
+	sideCount := rc * 6
+	g.count = uint32(endCount)*2 + uint32(sideCount)
 	g.vertices = make([]Vec3, g.count)
 	g.texCoords = make([]Vec2, g.count)
+
+	upperVts := buildRingVertices(rc, d.Upper.Radius, d.Upper.Offset)
+	lowerVts := buildRingVertices(rc, d.Lower.Radius, d.Lower.Offset)
+	upperEndTCs := buildRingEndTexCoords(rc, 0)
+	lowerEndTCs := buildRingEndTexCoords(rc, 1)
+	upperSideTCs := buildRingSideTexCoords(rc, 1)
+	lowerSideTCs := buildRingSideTexCoords(rc, 2)
+	for i := range rc {
+		j := (i + 1) % rc
+		ui := i * 3
+		li := ui + endCount
+		si := i*6 + 2*endCount
+
+		// end vertex
+		g.vertices[ui+0] = Vec3{0.0, 0.0, d.Upper.Offset}
+		g.vertices[ui+1] = upperVts[i]
+		g.vertices[ui+2] = upperVts[j]
+		g.vertices[li+0] = Vec3{0.0, 0.0, d.Lower.Offset}
+		g.vertices[li+1] = lowerVts[i]
+		g.vertices[li+2] = lowerVts[j]
+		// end texcoord
+		g.texCoords[ui+0] = Vec2{0.25, 0.25}
+		g.texCoords[ui+1] = upperEndTCs[i]
+		g.texCoords[ui+2] = upperEndTCs[j]
+		g.texCoords[li+0] = Vec2{0.75, 0.25}
+		g.texCoords[li+1] = lowerEndTCs[i]
+		g.texCoords[li+2] = lowerEndTCs[j]
+		// side vertex
+		g.vertices[si+0] = upperVts[i]
+		g.vertices[si+1] = upperVts[j]
+		g.vertices[si+2] = lowerVts[i]
+		g.vertices[si+3] = lowerVts[j]
+		g.vertices[si+4] = lowerVts[i]
+		g.vertices[si+5] = upperVts[j]
+		// side texcoord
+		g.texCoords[si+0] = upperSideTCs[i]
+		g.texCoords[si+1] = upperSideTCs[j]
+		g.texCoords[si+2] = lowerSideTCs[i]
+		g.texCoords[si+3] = lowerSideTCs[j]
+		g.texCoords[si+4] = lowerSideTCs[i]
+		g.texCoords[si+5] = upperSideTCs[j]
+	}
+
 	return g
 }
 
@@ -130,25 +214,25 @@ func (s *PlumeDef) newPlume() *Plume {
 	return p
 }
 
+type DecoupSpec struct {
+	Force float32 `json:"force"`
+}
+
 type EngineSpec struct {
 	FuelDef     FuelDef  `json:"fuel"`
 	PlumeDef    PlumeDef `json:"plume"`
 	CanShutdown bool     `json:"can_shutdown"`
 }
 
-type DecoupSpec struct {
-	Force float32 `json:"force"`
-}
-
 type PartDef struct {
 	Name     string      `json:"name"`
 	TypeName string      `json:"type"`
 	Mass     float32     `json:"mass"`
-	Body     BodyDef     `json:"body"`
-	Attach   AttachPt    `json:"attach"`
+	Body     *BodyDef    `json:"body"`
+	Attach   *AttachPt   `json:"attach"`
 	Ctrl     *CtrlSpec   `json:"ctrl"`
-	Engine   *EngineSpec `json:"engine"`
 	Decoup   *DecoupSpec `json:"decoup"`
+	Engine   *EngineSpec `json:"engine"`
 }
 
 func (d *PartDef) New() Part {
@@ -193,9 +277,11 @@ func (d *PartDef) newDecoup() *PartDecoup {
 	return p
 }
 func (d *PartDef) buildGeom() []Geom {
+	log.Println(*d)
 	taperLen := len(d.Body.Tapers)
 	geomLen := taperLen + len(d.Body.Planes)
 	geom := make([]Geom, geomLen)
+	log.Printf("%d tapers,  %d planes\n", taperLen, len(d.Body.Planes))
 	for i, taper := range d.Body.Tapers {
 		geom[i] = *taper.buildGeom()
 	}
@@ -215,13 +301,25 @@ func LoadPartDef(filename string) *PartDef {
 
 	fp, err := os.Open(filename)
 	if err != nil {
-		log.Fatalf("part_conf: %v\n", err)
+		log.Fatalf("part_def: %v\n", err)
 	}
 
 	partDef := new(PartDef)
 	dec := json.NewDecoder(fp)
-	if dec.Decode(partDef) != nil {
-		log.Fatalf("part_conf: %v\n", err)
+	if err := dec.Decode(partDef); err != nil {
+		log.Fatalf("part_def: %v\n", err)
+	}
+
+	if partDef.Body == nil {
+		log.Fatalf("part_def: no body in JSON\n")
+	}
+
+	if partDef.Attach == nil {
+		log.Fatalf("part_def: no attach in JSON\n")
+	}
+
+	if partDef.Ctrl == nil && partDef.Decoup == nil && partDef.Engine == nil {
+		log.Fatalf("part_def: no spec field: ctrl/decoup/engine in JSON\n")
 	}
 
 	return partDef
