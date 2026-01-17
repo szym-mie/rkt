@@ -5,12 +5,12 @@
     "mass": 1000.0,
     "body": {
         "tapers": [{
-            "texture": "res/solid2.png",
+            "texture": "base/solid2",
             "rings": 12,
             "upper": { "offset": 2.0, "radius": 1.0 },
             "lower": { "offset": -2.0, "radius": 1.0 }
         }, {
-            "texture": "res/nozzlea.png",
+            "texture": "base/nozzlea",
             "rings": 12,
             "upper": { "offset": -2.0, "radius": 0.6 },
             "lower": { "offset": -2.6, "radius": 0.8 }
@@ -28,7 +28,7 @@
             "flow": 1000.0
         },
         "plume": {
-            "texture": "res/plume1.png",
+            "texture": "base/plume1",
             "offset": [0.0, 0.0, -2.0],
             "size": 1.0
         },

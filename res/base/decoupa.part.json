@@ -5,7 +5,7 @@
     "mass": 0.4,
     "body": {
         "tapers": [{
-            "texture": "res/decoupa.png",
+            "texture": "base/decoupa",
             "rings": 12,
             "upper": { "offset": 0.8, "radius": 1.0 },
             "lower": { "offset": -0.2, "radius": 1.0 }

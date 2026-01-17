@@ -61,15 +61,17 @@ func main() {
 	f := float64(w)/h - 1
 	gl.Frustum(-1-f, 1+f, -1, 1, 1.0, 10.0)
 
-	ctrl1 := rkt.LoadPartDef("res/ctrl1.part.json")
-	solid2 := rkt.LoadPartDef("res/solid2.part.json")
-	decoupa := rkt.LoadPartDef("res/decoupa.part.json")
+	// ctrl1 := rkt.LoadPartDef("res/ctrl1.part.json")
+	// solid2 := rkt.LoadPartDef("res/solid2.part.json")
+	// decoupa := rkt.LoadPartDef("res/decoupa.part.json")
 
-	v := rkt.NewVehicle("test", rkt.NewPartNode(ctrl1.New()))
+	rkt.LoadPkg("res/base.zip")
+
+	v := rkt.NewVehicle("test", rkt.NewPartNode(rkt.NewPart("base/ctrl1")))
 	v.PartTree.
-		AttachBelow(solid2.New()).
-		AttachBelow(decoupa.New()).
-		AttachBelow(solid2.New())
+		AttachBelow(rkt.NewPart("base/solid2")).
+		AttachBelow(rkt.NewPart("base/decoupa")).
+		AttachBelow(rkt.NewPart("base/solid2"))
 
 	for !window.ShouldClose() {
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)

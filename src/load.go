@@ -1,12 +1,14 @@
 package rkt
 
 import (
+	"archive/zip"
 	"encoding/json"
 	"image"
 	"image/draw"
+	"io"
 	"log"
 	"math"
-	"os"
+	"strings"
 
 	"github.com/go-gl/gl/v2.1/gl"
 )
@@ -18,20 +20,11 @@ func (t Texture) bind() {
 }
 
 var textureMap = make(map[string]Texture, 64)
-var partDefMap = make(map[string]PartDef, 64)
+var partDefMap = make(map[string]*PartDef, 64)
 
-func loadTexture(filename string) Texture {
-	if texture, ok := textureMap[filename]; ok {
-		return texture
-	}
-
+func loadTexture(r io.Reader) Texture {
 	handle := uint32(0)
-	fp, err := os.Open(filename)
-	if err != nil {
-		log.Fatalf("texture: %v\n", err)
-	}
-
-	img, _, err := image.Decode(fp)
+	img, _, err := image.Decode(r)
 	if err != nil {
 		log.Fatalf("texture: %v\n", err)
 	}
@@ -116,7 +109,12 @@ func buildRingSideTexCoords(ringCount uint16, pageY uint8) []Vec2 {
 func (d *TaperDef) buildGeom() *Geom {
 	g := new(Geom)
 	rc := d.RingCount
-	g.texture = loadTexture(d.TextureName)
+	texture, ok := textureMap[d.TextureName]
+	if !ok {
+		log.Fatalf("build_geom: no such texture %s\n", d.TextureName)
+	}
+
+	g.texture = texture
 	endCount := rc * 3
 	sideCount := rc * 6
 	g.count = uint32(endCount)*2 + uint32(sideCount)
@@ -174,7 +172,7 @@ type PlaneDef struct {
 
 func (d *PlaneDef) buildGeom() *Geom {
 	g := new(Geom)
-	g.texture = loadTexture(d.TextureName)
+	g.texture = textureMap[d.TextureName]
 	g.count = 0
 	g.vertices = nil
 	g.texCoords = nil
@@ -208,7 +206,7 @@ type PlumeDef struct {
 
 func (s *PlumeDef) newPlume() *Plume {
 	p := new(Plume)
-	p.texture = loadTexture(s.TextureName)
+	p.texture = textureMap[s.TextureName]
 	p.offset = s.Offset
 	p.size = s.Size
 	return p
@@ -235,7 +233,7 @@ type PartDef struct {
 	Engine   *EngineSpec `json:"engine"`
 }
 
-func (d *PartDef) New() Part {
+func (d *PartDef) newPart() Part {
 	switch d.TypeName {
 	case "ctrl":
 		return d.newCtrl()
@@ -277,7 +275,6 @@ func (d *PartDef) newDecoup() *PartDecoup {
 	return p
 }
 func (d *PartDef) buildGeom() []Geom {
-	log.Println(*d)
 	taperLen := len(d.Body.Tapers)
 	geomLen := taperLen + len(d.Body.Planes)
 	geom := make([]Geom, geomLen)
@@ -294,18 +291,9 @@ func (d *PartDef) buildGeom() []Geom {
 	return geom
 }
 
-func LoadPartDef(filename string) *PartDef {
-	if partDef, ok := partDefMap[filename]; ok {
-		return &partDef
-	}
-
-	fp, err := os.Open(filename)
-	if err != nil {
-		log.Fatalf("part_def: %v\n", err)
-	}
-
+func loadPartDef(r io.Reader) *PartDef {
 	partDef := new(PartDef)
-	dec := json.NewDecoder(fp)
+	dec := json.NewDecoder(r)
 	if err := dec.Decode(partDef); err != nil {
 		log.Fatalf("part_def: %v\n", err)
 	}
@@ -325,13 +313,48 @@ func LoadPartDef(filename string) *PartDef {
 	return partDef
 }
 
-type Manifest struct {
-	Version string            `json:"ver"`
-	Preload map[string]string `json:"pre"`
+func NewPart(name string) Part {
+	partDef, ok := partDefMap[name]
+	if !ok {
+		log.Fatalf("new_part: no partdef %s\n", name)
+	}
+
+	return partDef.newPart()
 }
 
-const manifestFilename = "a.manifest.json"
+func LoadPkg(filename string) uint {
+	r, err := zip.OpenReader(filename)
+	if err != nil {
+		log.Fatalf("load_pkg: %v\n", err)
+	}
 
-func LoadPath(where string) uint {
-	return 0
+	loadedCount := uint(0)
+
+	for _, zf := range r.File {
+		path := strings.ReplaceAll(zf.Name, "\\", "/")
+		name, suffix, found := strings.Cut(path, ".")
+		if !found {
+			continue
+		}
+
+		fp, err := zf.Open()
+		if err != nil {
+			log.Fatalf("load_pkg: %v\n", fp)
+		}
+
+		switch suffix {
+		case "png", "jpg":
+			log.Printf("+texture %s\n", name)
+			textureMap[name] = loadTexture(fp)
+			loadedCount++
+		case "part.json":
+			log.Printf("+partdef %s\n", name)
+			partDefMap[name] = loadPartDef(fp)
+			loadedCount++
+		}
+
+		fp.Close()
+	}
+
+	return loadedCount
 }
