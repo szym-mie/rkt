@@ -25,8 +25,9 @@ func onKey(w *glfw.Window, key glfw.Key, sc int, act glfw.Action, mods glfw.Modi
 	}
 }
 
-const w = 320 * 3
-const h = 240 * 3
+const scale = 3
+const w = 320 * scale
+const h = 240 * scale
 
 func main() {
 	err := glfw.Init()
@@ -73,18 +74,21 @@ func main() {
 		AttachBelow(rkt.NewPart("base/decoupa")).
 		AttachBelow(rkt.NewPart("base/solid2"))
 
+	rot := float32(0.0)
 	for !window.ShouldClose() {
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 		gl.MatrixMode(gl.MODELVIEW)
 		gl.LoadIdentity()
 		gl.Translatef(4.0, 0.0, -8.0)
-		gl.Rotatef(30.0, 1.0, 0.0, 0.0)
+		gl.Rotatef(rot, 1.0, 0.0, 0.0)
 		gl.Rotatef(90.0, 0.0, 1.0, 0.0)
 
 		v.Draw()
 
 		window.SwapBuffers()
 		glfw.PollEvents()
+
+		rot += 0.01
 	}
 }

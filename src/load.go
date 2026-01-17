@@ -98,7 +98,8 @@ func buildRingEndTexCoords(ringCount uint16, pageX uint8) []Vec2 {
 func buildRingSideTexCoords(ringCount uint16, pageY uint8) []Vec2 {
 	sideTCs := make([]Vec2, ringCount)
 	for i := range ringCount {
-		x := float32(i) / float32(ringCount) * 2.0
+		d := float64(i) / float64(ringCount)
+		x := float32(math.Abs(d*2.0 - 1.0))
 		y := float32(pageY) * 0.5
 		sideTCs[i] = Vec2{x, y}
 	}
@@ -278,7 +279,8 @@ func (d *PartDef) buildGeom() []Geom {
 	taperLen := len(d.Body.Tapers)
 	geomLen := taperLen + len(d.Body.Planes)
 	geom := make([]Geom, geomLen)
-	log.Printf("%d tapers,  %d planes\n", taperLen, len(d.Body.Planes))
+	log.Printf("build_geom: %s - %d tapers %d planes\n",
+		d.Name, taperLen, len(d.Body.Planes))
 	for i, taper := range d.Body.Tapers {
 		geom[i] = *taper.buildGeom()
 	}
