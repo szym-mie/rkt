@@ -75,6 +75,9 @@ func main() {
 	gl.DepthFunc(gl.LESS)
 	gl.ClearDepth(1.0)
 
+	gl.Enable(gl.BLEND)
+	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+
 	camera := rkt.NewCamera(1.0, 8000.0, 100.0)
 	camera.SetViewport(w, h)
 	camera.CaptureMouse(window)
@@ -94,6 +97,25 @@ func main() {
 	patch := rkt.NewPatch("base/geom/patch00")
 	patch.Scale = 1600.0
 	patch.Pos.Z = -10.6
+
+	labelPressQ := rkt.NewLabelFor("base/font/anlg", "press 'q' to quit")
+	labelPressS := rkt.NewLabelFor("base/font/anlg", "press 's' to fire next stage")
+	labelUseZoom := rkt.NewLabelFor("base/font/anlg", "press '+/-' to zoom in/out")
+	labelUseMouse := rkt.NewLabelFor("base/font/anlg", "move mouse to look around")
+
+	labelPressQ.Scale = 1.0
+	labelPressS.Scale = 1.0
+	labelUseZoom.Scale = 1.0
+	labelUseMouse.Scale = 1.0
+
+	labelPressQ.Pos.Y = 6.0
+	labelPressQ.Pos.Z = -6.0
+	labelPressS.Pos.Y = 5.0
+	labelPressS.Pos.Z = -6.0
+	labelUseZoom.Pos.Y = 4.0
+	labelUseZoom.Pos.Z = -6.0
+	labelUseMouse.Pos.Y = 3.0
+	labelUseMouse.Pos.Z = -6.0
 
 	n := v.Stages
 	for n != nil {
@@ -124,6 +146,12 @@ func main() {
 
 		patch.Draw()
 		v.Draw()
+
+		labelPressQ.Draw()
+		labelPressS.Draw()
+		labelUseZoom.Draw()
+		labelUseMouse.Draw()
+
 		v.Update(float32(dt.Seconds()))
 
 		time.Sleep(dt)

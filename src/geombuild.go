@@ -41,3 +41,20 @@ func buildRingSideTexCoords(ringCount int, pageY uint8) []Vec2 {
 
 	return sideTCs
 }
+
+func buildTextVertices(len int) []Vec3 {
+	count := len * 6
+	textVts := make([]Vec3, count)
+	for i := range len {
+		j := i * 6
+		d := float32(i) - float32(len-1)*0.5
+		textVts[j+0] = Vec3{-0.5 + d, -0.5, 0.0}
+		textVts[j+1] = Vec3{+0.5 + d, -0.5, 0.0}
+		textVts[j+2] = Vec3{+0.5 + d, +0.5, 0.0}
+		textVts[j+3] = Vec3{+0.5 + d, +0.5, 0.0}
+		textVts[j+4] = Vec3{-0.5 + d, +0.5, 0.0}
+		textVts[j+5] = Vec3{-0.5 + d, -0.5, 0.0}
+	}
+
+	return textVts
+}
