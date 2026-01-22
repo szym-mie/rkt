@@ -7,11 +7,31 @@ import (
 )
 
 type Vec2 struct {
-	x, y float32
+	X, Y float32
+}
+
+func (v *Vec2) UnmarshalJSON(data []byte) error {
+	val := new([2]float32)
+	if err := json.Unmarshal(data, val); err != nil {
+		return err
+	}
+
+	v.fromArray(*val)
+	return nil
+}
+func (v *Vec2) fromArray(val [2]float32) {
+	v.X = val[0]
+	v.Y = val[1]
+}
+func (v Vec2) add(u Vec2) Vec2 {
+	return Vec2{v.X + u.X, v.Y + u.Y}
+}
+func (v Vec2) sub(u Vec2) Vec2 {
+	return Vec2{v.X - u.X, v.Y - u.Y}
 }
 
 type Vec3 struct {
-	x, y, z float32
+	X, Y, Z float32
 }
 
 func (v *Vec3) UnmarshalJSON(data []byte) error {
@@ -23,17 +43,17 @@ func (v *Vec3) UnmarshalJSON(data []byte) error {
 	v.fromArray(*val)
 	return nil
 }
-
 func (v *Vec3) fromArray(val [3]float32) {
-	v.x = val[0]
-	v.y = val[1]
-	v.z = val[2]
+	v.X = val[0]
+	v.Y = val[1]
+	v.Z = val[2]
 }
-
 func (v Vec3) apply() {
-	gl.Translatef(v.x, v.y, v.z)
+	gl.Translatef(v.X, v.Y, v.Z)
 }
-
 func (v Vec3) add(u Vec3) Vec3 {
-	return Vec3{v.x + u.x, v.y + u.y, v.z + u.z}
+	return Vec3{v.X + u.X, v.Y + u.Y, v.Z + u.Z}
+}
+func (v Vec3) scale(k float32) Vec3 {
+	return Vec3{v.X * k, v.Y * k, v.Z * k}
 }

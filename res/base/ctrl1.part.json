@@ -5,8 +5,8 @@
     "mass": 3.0,
     "body": {
         "tapers": [{
-            "texture": "base/ctrl1",
-            "rings": 12,
+            "texture": "base/part/ctrl1",
+            "rings": 16,
             "upper": { "offset": 1.0, "radius": 0.4 },
             "lower": { "offset": -1.0, "radius": 1.0 }
         }],

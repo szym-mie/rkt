@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"runtime"
+	"time"
 
 	_ "image/jpeg"
 	_ "image/png"
@@ -17,11 +18,27 @@ func init() {
 	runtime.LockOSThread()
 }
 
+var v *rkt.Vehicle
+var radius float32
+
 func onKey(w *glfw.Window, key glfw.Key, sc int, act glfw.Action, mods glfw.ModifierKey) {
 	log.Printf("key: %s\n", glfw.GetKeyName(key, sc))
 	if key == glfw.KeyQ {
-		log.Printf("== quit ==\n")
+		log.Printf("== quit ==")
 		w.SetShouldClose(true)
+	}
+	if key == glfw.KeyS && act == glfw.Press {
+		log.Printf("== stage ==")
+		v.ApplyStage()
+	}
+	if key == glfw.KeyBackspace && act == glfw.Press {
+		radius = 10.0
+	}
+	if key == glfw.KeyEqual && act == glfw.Press {
+		radius *= 0.7
+	}
+	if key == glfw.KeyMinus && act == glfw.Press {
+		radius *= 1.2
 	}
 }
 
@@ -51,44 +68,67 @@ func main() {
 		panic(err)
 	}
 
+	gl.Enable(gl.CULL_FACE)
 	gl.ClearColor(0.2, 0.7, 0.8, 0.0)
 
 	gl.Enable(gl.DEPTH_TEST)
 	gl.DepthFunc(gl.LESS)
 	gl.ClearDepth(1.0)
 
-	gl.MatrixMode(gl.PROJECTION)
-	gl.LoadIdentity()
-	f := float64(w)/h - 1
-	gl.Frustum(-1-f, 1+f, -1, 1, 1.0, 10.0)
+	camera := rkt.NewCamera(1.0, 8000.0, 100.0)
+	camera.SetViewport(w, h)
+	camera.CaptureMouse(window)
 
-	// ctrl1 := rkt.LoadPartDef("res/ctrl1.part.json")
-	// solid2 := rkt.LoadPartDef("res/solid2.part.json")
-	// decoupa := rkt.LoadPartDef("res/decoupa.part.json")
+	radius = 10.0
 
 	rkt.LoadPkg("res/base.zip")
 
-	v := rkt.NewVehicle("test", rkt.NewPartNode(rkt.NewPart("base/ctrl1")))
-	v.PartTree.
-		AttachBelow(rkt.NewPart("base/solid2")).
-		AttachBelow(rkt.NewPart("base/decoupa")).
-		AttachBelow(rkt.NewPart("base/solid2"))
+	v = rkt.NewVehicle("test", rkt.NewPart("base/ctrl1"))
+	p := v.Parts
+	p = v.AttachBelow(p, rkt.NewPart("base/solid2"))
+	p = v.AttachBelow(p, rkt.NewPart("base/decoupa"))
+	v.AddStage()
+	p = v.AttachBelow(p, rkt.NewPart("base/solid2"))
+	camera.Target = v
 
-	rot := float32(0.0)
+	patch := rkt.NewPatch("base/geom/patch00")
+	patch.Scale = 1600.0
+	patch.Pos.Z = -10.6
+
+	n := v.Stages
+	for n != nil {
+		name := "<sep>"
+		if n.Part != nil {
+			name = n.Part.GetName()
+		}
+		log.Printf("%v, ", name)
+		n = n.Next
+	}
+
 	for !window.ShouldClose() {
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
+		camera.Radius = radius
+
+		x, y := window.GetCursorPos()
+		mousePos := rkt.Vec2{X: float32(x), Y: float32(y)}
+		camera.Update(mousePos)
+		camera.Apply()
+
 		gl.MatrixMode(gl.MODELVIEW)
 		gl.LoadIdentity()
-		gl.Translatef(4.0, 0.0, -8.0)
-		gl.Rotatef(rot, 1.0, 0.0, 0.0)
-		gl.Rotatef(90.0, 0.0, 1.0, 0.0)
 
+		log.Printf("pz %v vz %v", v.Pos.Z, v.Vel.Z)
+
+		dt := time.Millisecond * 50
+
+		patch.Draw()
 		v.Draw()
+		v.Update(float32(dt.Seconds()))
+
+		time.Sleep(dt)
 
 		window.SwapBuffers()
 		glfw.PollEvents()
-
-		rot += 0.01
 	}
 }
