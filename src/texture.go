@@ -8,10 +8,38 @@ import (
 
 type Bitmap image.RGBA
 
+type TextureFilter int
+
+const (
+	TextureFilterNearest = iota
+	TextureFilterLinear
+)
+
 type Texture uint32
 
+func (t Texture) filter(filterType TextureFilter) {
+	t.bind()
+	switch filterType {
+	case TextureFilterNearest:
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+	case TextureFilterLinear:
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+	}
+}
 func (t Texture) bind() {
+	gl.ActiveTexture(gl.TEXTURE0)
 	gl.BindTexture(gl.TEXTURE_2D, uint32(t))
+}
+func (t Texture) bindTo(unit uint32) {
+	gl.ActiveTexture(gl.TEXTURE0 + unit)
+	gl.BindTexture(gl.TEXTURE_2D, uint32(t))
+}
+
+func InitTextureUnit(unit uint32) {
+	gl.ActiveTexture(gl.TEXTURE0 + unit)
+	gl.Enable(gl.TEXTURE_2D)
 }
 
 func (b *Bitmap) createTexture() Texture {
@@ -21,10 +49,9 @@ func (b *Bitmap) createTexture() Texture {
 	gl.GenTextures(1, &handle)
 	texture := Texture(handle)
 	texture.bind()
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.MIRRORED_REPEAT)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT)
+	texture.filter(TextureFilterNearest)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
 	gl.TexImage2D(
 		gl.TEXTURE_2D,
 		0,
@@ -35,6 +62,7 @@ func (b *Bitmap) createTexture() Texture {
 		gl.RGBA,
 		gl.UNSIGNED_BYTE,
 		gl.Ptr(b.Pix))
+	gl.GenerateMipmap(gl.TEXTURE_2D)
 
 	return texture
 }

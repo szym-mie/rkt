@@ -9,17 +9,18 @@ import (
 type Patch struct {
 	Pos   Vec3
 	Scale float32
-	geom  *Geom
+	geom  *Geom2
 }
 
 func NewPatch(geomName string) *Patch {
 	p := new(Patch)
-	geomDef, ok := geomDefMap[geomName]
+	geomDef, ok := geom2DefMap[geomName]
 	if !ok {
 		log.Fatalf("new_patch: no such geomdef %s", geomName)
 	}
 
 	p.geom = geomDef.create()
+	p.geom.Texture0.filter(TextureFilterLinear)
 	p.Scale = 1.0
 	return p
 }
@@ -27,7 +28,6 @@ func NewPatch(geomName string) *Patch {
 func (p *Patch) Draw() {
 	gl.MatrixMode(gl.MODELVIEW)
 	gl.PushMatrix()
-
 	p.Pos.apply()
 	gl.Scalef(p.Scale, p.Scale, p.Scale)
 	p.geom.draw()

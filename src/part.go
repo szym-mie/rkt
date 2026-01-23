@@ -27,7 +27,7 @@ func NewPart(name string) Part {
 
 type PartBase struct {
 	Def              *PartDef
-	Geom             []Geom
+	Geom             []Geom1
 	IsActive, IsDead bool
 }
 

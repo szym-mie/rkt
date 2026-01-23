@@ -14,7 +14,7 @@ type Label struct {
 	Pos   Vec3
 	Scale float32
 	len   int
-	geom  *Geom
+	geom  *Geom1
 }
 
 func NewLabel(fontName string, len int) *Label {
@@ -25,7 +25,7 @@ func NewLabel(fontName string, len int) *Label {
 	}
 
 	t.len = len
-	t.geom = NewGeom(texture, len*2)
+	t.geom = NewGeom1(texture, len*2)
 	copy(t.geom.Vertices, buildTextVertices(len))
 	t.Scale = 1.0
 	return t

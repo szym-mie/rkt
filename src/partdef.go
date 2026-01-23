@@ -77,10 +77,10 @@ func (d *PartDef) createDecoup() *PartDecoup {
 	p.IsUsed = false
 	return p
 }
-func (d *PartDef) buildGeom() []Geom {
+func (d *PartDef) buildGeom() []Geom1 {
 	taperLen := len(d.Body.Tapers)
 	geomLen := taperLen + len(d.Body.Planes)
-	geom := make([]Geom, geomLen)
+	geom := make([]Geom1, geomLen)
 	log.Printf("build_geom: %s - %d tapers %d planes",
 		d.Name, taperLen, len(d.Body.Planes))
 	for i, taper := range d.Body.Tapers {

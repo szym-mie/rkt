@@ -21,14 +21,14 @@ type TaperDef struct {
 	Lower       TaperEndDef `json:"lower"`
 }
 
-func (d *TaperDef) buildGeom() *Geom {
+func (d *TaperDef) buildGeom() *Geom1 {
 	rc := d.RingCount
 	texture, ok := textureMap[d.TextureName]
 	if !ok {
 		log.Fatalf("build_geom: no such texture %s\n", d.TextureName)
 	}
 
-	g := NewGeom(texture, rc*4)
+	g := NewGeom1(texture, rc*4)
 	endCount := rc * 3
 
 	upperVts := buildRingVertices(rc, d.Upper.Radius, d.Upper.Offset)
@@ -80,8 +80,8 @@ type PlaneDef struct {
 	TextureName string `json:"texture"`
 }
 
-func (d *PlaneDef) buildGeom() *Geom {
-	g := new(Geom)
+func (d *PlaneDef) buildGeom() *Geom1 {
+	g := new(Geom1)
 	g.Texture = textureMap[d.TextureName]
 	g.Count = 0
 	g.Vertices = nil

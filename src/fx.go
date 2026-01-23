@@ -1,7 +1,7 @@
 package rkt
 
 type Plume struct {
-	geom      *Geom
+	geom      *Geom1
 	offset    Vec3
 	size      float32
 	texOffset float32

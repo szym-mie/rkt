@@ -78,6 +78,9 @@ func main() {
 	gl.Enable(gl.BLEND)
 	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
+	rkt.InitTextureUnit(0)
+	rkt.InitTextureUnit(1)
+
 	camera := rkt.NewCamera(1.0, 8000.0, 100.0)
 	camera.SetViewport(w, h)
 	camera.CaptureMouse(window)

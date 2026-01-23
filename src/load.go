@@ -12,7 +12,8 @@ import (
 
 var bitmapMap = make(map[string]*Bitmap, 64)
 var textureMap = make(map[string]Texture, 64)
-var geomDefMap = make(map[string]*GeomDef, 64)
+var geom1DefMap = make(map[string]*Geom1Def, 64)
+var geom2DefMap = make(map[string]*Geom2Def, 64)
 var partDefMap = make(map[string]*PartDef, 64)
 
 func loadBitmap(r io.Reader) *Bitmap {
@@ -43,7 +44,7 @@ func (d *PlumeDef) create() *Plume {
 		log.Fatalf("build_geom: no such texture %s", d.TextureName)
 	}
 
-	g := NewGeom(texture, 12)
+	g := NewGeom1(texture, 12)
 	ringVts := buildRingVertices(6, 1.4, -2.0)
 	for i := range 6 {
 		j := (i + 1) % 6
@@ -91,11 +92,21 @@ func loadPartDef(r io.Reader) *PartDef {
 	return def
 }
 
-func loadGeomDef(r io.Reader) *GeomDef {
-	def := new(GeomDef)
+func loadGeom1Def(r io.Reader) *Geom1Def {
+	def := new(Geom1Def)
 	dec := json.NewDecoder(r)
 	if err := dec.Decode(def); err != nil {
-		log.Fatalf("load_geom_def: %v\n", err)
+		log.Fatalf("load_geom1_def: %v\n", err)
+	}
+
+	return def
+}
+
+func loadGeom2Def(r io.Reader) *Geom2Def {
+	def := new(Geom2Def)
+	dec := json.NewDecoder(r)
+	if err := dec.Decode(def); err != nil {
+		log.Fatalf("load_geom2_def: %v\n", err)
 	}
 
 	return def
@@ -132,9 +143,12 @@ func LoadPkg(filename string) uint {
 			log.Printf("+partdef %s", name)
 			partDefMap[name] = loadPartDef(fp)
 			loadedCount++
-		case "geom.json":
-			log.Printf("+geomdef %s", name)
-			geomDefMap[name] = loadGeomDef(fp)
+		case "geom1.json":
+			log.Printf("+geom1def %s", name)
+			geom1DefMap[name] = loadGeom1Def(fp)
+		case "geom2.json":
+			log.Printf("+geom2def %s", name)
+			geom2DefMap[name] = loadGeom2Def(fp)
 		}
 
 		fp.Close()
