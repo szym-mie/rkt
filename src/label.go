@@ -50,7 +50,6 @@ func (l *Label) Write(msg string) {
 		j := i * 6
 		xu := xl + fontDx
 		yu := yl + fontDy
-		log.Printf("%x %f %f", c, xl, yl)
 		l.geom.TexCoords[j+0] = Vec2{xl, yu}
 		l.geom.TexCoords[j+1] = Vec2{xu, yu}
 		l.geom.TexCoords[j+2] = Vec2{xu, yl}

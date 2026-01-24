@@ -14,6 +14,7 @@ var bitmapMap = make(map[string]*Bitmap, 64)
 var textureMap = make(map[string]Texture, 64)
 var geom1DefMap = make(map[string]*Geom1Def, 64)
 var geom2DefMap = make(map[string]*Geom2Def, 64)
+var patchDefMap = make(map[string]*PatchDef, 64)
 var partDefMap = make(map[string]*PartDef, 64)
 
 func loadBitmap(r io.Reader) *Bitmap {
@@ -29,45 +30,6 @@ func loadBitmap(r io.Reader) *Bitmap {
 
 	draw.Draw(rgba, rgba.Bounds(), img, image.Pt(0, 0), draw.Src)
 	return (*Bitmap)(rgba)
-}
-
-type PlumeDef struct {
-	TextureName string  `json:"texture"`
-	Offset      Vec3    `json:"offset"`
-	Size        float32 `json:"size"`
-}
-
-func (d *PlumeDef) create() *Plume {
-	p := new(Plume)
-	texture, ok := textureMap[d.TextureName]
-	if !ok {
-		log.Fatalf("build_geom: no such texture %s", d.TextureName)
-	}
-
-	g := NewGeom1(texture, 12)
-	ringVts := buildRingVertices(6, 1.4, -2.0)
-	for i := range 6 {
-		j := (i + 1) % 6
-		ri := i * 6
-		g.Vertices[ri+0] = Vec3{0.0, 0.0, 0.0}
-		g.Vertices[ri+1] = ringVts[i]
-		g.Vertices[ri+2] = ringVts[j]
-		g.Vertices[ri+3] = Vec3{0.0, 0.0, -6.0}
-		g.Vertices[ri+4] = ringVts[j]
-		g.Vertices[ri+5] = ringVts[i]
-
-		g.TexCoords[ri+0] = Vec2{0.5, 0.0}
-		g.TexCoords[ri+1] = Vec2{0.0, 0.5}
-		g.TexCoords[ri+2] = Vec2{1.0, 0.5}
-		g.TexCoords[ri+3] = Vec2{0.5, 1.0}
-		g.TexCoords[ri+4] = Vec2{1.0, 0.5}
-		g.TexCoords[ri+5] = Vec2{0.0, 0.5}
-	}
-
-	p.geom = g
-	p.offset = d.Offset
-	p.size = d.Size
-	return p
 }
 
 func loadPartDef(r io.Reader) *PartDef {
@@ -112,6 +74,16 @@ func loadGeom2Def(r io.Reader) *Geom2Def {
 	return def
 }
 
+func loadPatchDef(r io.Reader) *PatchDef {
+	def := new(PatchDef)
+	dec := json.NewDecoder(r)
+	if err := dec.Decode(def); err != nil {
+		log.Fatalf("load_patch_def: %v\n", err)
+	}
+
+	return def
+}
+
 func LoadPkg(filename string) uint {
 	r, err := zip.OpenReader(filename)
 	if err != nil {
@@ -149,6 +121,9 @@ func LoadPkg(filename string) uint {
 		case "geom2.json":
 			log.Printf("+geom2def %s", name)
 			geom2DefMap[name] = loadGeom2Def(fp)
+		case "patch.json":
+			log.Printf("+patchdef %s", name)
+			patchDefMap[name] = loadPatchDef(fp)
 		}
 
 		fp.Close()

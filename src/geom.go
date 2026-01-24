@@ -105,12 +105,12 @@ func NewGeom2(texture0, texture1 Texture, triCount int) *Geom2 {
 
 func (d *Geom2Def) create() *Geom2 {
 	g := new(Geom2)
-	texture1, ok := textureMap[d.Texture0Name]
+	texture0, ok := textureMap[d.Texture0Name]
 	if !ok {
 		log.Fatalf("create: no such texture %s", d.Texture0Name)
 	}
 
-	texture2, ok := textureMap[d.Texture1Name]
+	texture1, ok := textureMap[d.Texture1Name]
 	if !ok {
 		log.Fatalf("create: no such texture %s", d.Texture1Name)
 	}
@@ -120,8 +120,8 @@ func (d *Geom2Def) create() *Geom2 {
 		log.Fatalf("create: vertices and texcoords lens mismatch")
 	}
 
-	g.Texture0 = texture1
-	g.Texture1 = texture2
+	g.Texture0 = texture0
+	g.Texture1 = texture1
 	g.Vertices = make([]Vec3, count)
 	g.TexCoords0 = make([]Vec2, count)
 	g.TexCoords1 = make([]Vec2, count)
@@ -157,6 +157,7 @@ func (g *Geom2) clone() *Geom2 {
 func (g *Geom2) draw() {
 	g.Texture0.bindTo(0)
 	g.Texture1.bindTo(1)
+	g.Texture0.filter(TextureFilterLinear)
 	gl.Begin(gl.TRIANGLES)
 	for i := range g.Count {
 		v := g.Vertices[i]

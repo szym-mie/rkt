@@ -80,6 +80,7 @@ func main() {
 
 	rkt.InitTextureUnit(0)
 	rkt.InitTextureUnit(1)
+	rkt.InitTextureUnit(2)
 
 	camera := rkt.NewCamera(1.0, 8000.0, 100.0)
 	camera.SetViewport(w, h)
@@ -97,7 +98,7 @@ func main() {
 	p = v.AttachBelow(p, rkt.NewPart("base/solid2"))
 	camera.Target = v
 
-	patch := rkt.NewPatch("base/geom/patch00")
+	patch := rkt.NewPatch("base/patch/00")
 	patch.Scale = 1600.0
 	patch.Pos.Z = -10.6
 

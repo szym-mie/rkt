@@ -1,0 +1,12 @@
+{
+    "lat": 0.0,
+    "lon": 0.0,
+    "scale": 1600.0,
+    "geom": "base/geom/patch00",
+    "objs": [
+        { "obj": "base/geom/rktasm", "pos": [200.0, 0.0, 0.0], "rotz": 0.0 },
+        { "obj": "base/geom/homea", "pos": [-960.0, -62.0, 0.0], "rotz": 0.30 },
+        { "obj": "base/geom/homea", "pos": [-960.0, -76.0, 0.0], "rotz": 0.60 },
+        { "obj": "base/geom/homeb", "pos": [-980.0, -70.0, 0.0], "rotz": -0.60 }
+    ]
+}
