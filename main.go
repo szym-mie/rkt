@@ -27,7 +27,7 @@ func onKey(w *glfw.Window, key glfw.Key, sc int, act glfw.Action, mods glfw.Modi
 		log.Printf("== quit ==")
 		w.SetShouldClose(true)
 	}
-	if key == glfw.KeyS && act == glfw.Press {
+	if key == glfw.KeySpace && act == glfw.Press {
 		log.Printf("== stage ==")
 		v.ApplyStage()
 	}
@@ -39,6 +39,22 @@ func onKey(w *glfw.Window, key glfw.Key, sc int, act glfw.Action, mods glfw.Modi
 	}
 	if key == glfw.KeyMinus && act == glfw.Press {
 		radius *= 1.2
+	}
+	if key == glfw.KeyA && act == glfw.Press {
+		p := rkt.NewAxisAngleQuat(0.1, rkt.Vec3{X: 1.0, Y: 0.0, Z: 0.0})
+		v.Ang = v.Ang.Product(p)
+	}
+	if key == glfw.KeyD && act == glfw.Press {
+		p := rkt.NewAxisAngleQuat(-0.1, rkt.Vec3{X: 1.0, Y: 0.0, Z: 0.0})
+		v.Ang = v.Ang.Product(p)
+	}
+	if key == glfw.KeyW && act == glfw.Press {
+		p := rkt.NewAxisAngleQuat(-0.1, rkt.Vec3{X: 0.0, Y: 1.0, Z: 0.0})
+		v.Ang = v.Ang.Product(p)
+	}
+	if key == glfw.KeyS && act == glfw.Press {
+		p := rkt.NewAxisAngleQuat(0.1, rkt.Vec3{X: 0.0, Y: 1.0, Z: 0.0})
+		v.Ang = v.Ang.Product(p)
 	}
 }
 

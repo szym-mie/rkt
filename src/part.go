@@ -95,7 +95,9 @@ func (p *PartEngine) update(v *Vehicle, n *PartNode, dt float32) {
 
 	if p.FuelMass > 0.0 {
 		force := e.FuelDef.Impulse * p.FuelFlow * dt
-		v.Vel.Z += force / v.Mass
+		forceVec := Vec3{0.0, 0.0, force}
+		log.Printf("%v", v.Rot.rotate(forceVec))
+		v.Vel = v.Vel.add(v.Rot.rotate(forceVec).scale(1 / v.Mass))
 		fuelCons := p.FuelFlow * dt
 		p.FuelMass -= min(fuelCons, p.FuelMass)
 		p.Plume.update(dt)

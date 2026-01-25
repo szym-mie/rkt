@@ -56,8 +56,8 @@ func (c *Camera) Apply() {
 }
 func (c *Camera) Update(mousePos Vec2) {
 	if c.Target != nil {
-		c.FocusPos.X = c.Target.Pos.X
-		c.FocusPos.Y = c.Target.Pos.Y
+		c.FocusPos.X = -c.Target.Pos.X
+		c.FocusPos.Y = -c.Target.Pos.Y
 		c.FocusPos.Z = -c.Target.Pos.Z
 	}
 

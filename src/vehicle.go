@@ -16,6 +16,8 @@ func NewVehicle(name string, root Part) *Vehicle {
 	v.Name = name
 	v.Parts = NewPartNode(root)
 	v.Stages = &StageNode{nil, nil}
+	v.Rot = ZeroQuat()
+	v.Ang = ZeroQuat()
 	return v
 }
 
@@ -46,12 +48,16 @@ func (v *Vehicle) Update(dt float32) {
 	v.Pos = v.Pos.add(v.Vel.scale(dt))
 	if v.Pos.Z < 0.0 {
 		v.Pos.Z = 0.0
+		v.Rot = ZeroQuat()
+		v.Ang = ZeroQuat()
 		if v.Vel.Z < 0.0 {
 			v.Vel.X *= 0.8
 			v.Vel.Y *= 0.8
 			v.Vel.Z = 0.0
 		}
 	}
+	// TODO: scale the rotation by timestep
+	v.Rot = v.Rot.Product(v.Ang)
 }
 func (v *Vehicle) AddToStage(part Part) {
 	s := new(StageNode)
