@@ -2,7 +2,7 @@
     "name": "decoupa",
     "info": "",
     "type": "decoup",
-    "mass": 0.4,
+    "mass": 400.0,
     "body": {
         "tapers": [{
             "texture": "base/part/decoupa",

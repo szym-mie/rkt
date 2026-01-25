@@ -25,7 +25,7 @@
         "fuel": {
             "mass": 8000.0,
             "impulse": 205.0,
-            "flow": 1000.0
+            "flow": 1600.0
         },
         "plume": {
             "texture": "base/part/plume1",

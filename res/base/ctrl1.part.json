@@ -2,7 +2,7 @@
     "name": "ctrl1",
     "info": "",
     "type": "ctrl",
-    "mass": 3.0,
+    "mass": 3000.0,
     "body": {
         "tapers": [{
             "texture": "base/part/ctrl1",
