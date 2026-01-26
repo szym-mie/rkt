@@ -43,6 +43,36 @@ func (q Quat) Product(p Quat) Quat {
 	return Quat{a, b, c, d}
 }
 
+func (q Quat) Slerp(p Quat, w float32) Quat {
+	cht := float64(q.a*p.a + q.b*p.b + q.c*p.c + q.d*p.d)
+	if cht >= 1.0 || cht <= -1.0 {
+		return q
+	}
+
+	ht := math.Acos(cht)
+	sht := math.Sqrt(1.0 - cht*cht)
+	if sht < 0.0001 && sht > -0.0001 {
+		a := q.a*0.5 + p.a*0.5
+		b := q.b*0.5 + p.b*0.5
+		c := q.c*0.5 + p.c*0.5
+		d := q.d*0.5 + p.d*0.5
+		return Quat{a, b, c, d}
+	}
+
+	r := float64(w)
+	rq := float32(math.Sin((1-r)*ht) / sht)
+	rp := float32(math.Sin(r*ht) / sht)
+	a := q.a*rq + p.a*rp
+	b := q.b*rq + p.b*rp
+	c := q.c*rq + p.c*rp
+	d := q.d*rq + p.d*rp
+	return Quat{a, b, c, d}
+}
+
+func (q Quat) ZeroSlerp(w float32) Quat {
+	return q.Slerp(ZeroQuat(), w)
+}
+
 func (q Quat) rotate(v Vec3) Vec3 {
 	p := Quat{0.0, v.X, v.Y, v.Z}
 	o := q.Product(p).Product(q.conj())

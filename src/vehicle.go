@@ -57,7 +57,7 @@ func (v *Vehicle) Update(dt float32) {
 		}
 	}
 	// TODO: scale the rotation by timestep
-	v.Rot = v.Rot.Product(v.Ang)
+	v.Rot = v.Rot.Product(ZeroQuat().Slerp(v.Ang, dt))
 }
 func (v *Vehicle) AddToStage(part Part) {
 	s := new(StageNode)

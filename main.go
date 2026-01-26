@@ -41,19 +41,19 @@ func onKey(w *glfw.Window, key glfw.Key, sc int, act glfw.Action, mods glfw.Modi
 		radius *= 1.2
 	}
 	if key == glfw.KeyA && act == glfw.Press {
-		p := rkt.NewAxisAngleQuat(0.1, rkt.Vec3{X: 1.0, Y: 0.0, Z: 0.0})
+		p := rkt.NewAxisAngleQuat(5.0, rkt.Vec3{X: 1.0, Y: 0.0, Z: 0.0})
 		v.Ang = v.Ang.Product(p)
 	}
 	if key == glfw.KeyD && act == glfw.Press {
-		p := rkt.NewAxisAngleQuat(-0.1, rkt.Vec3{X: 1.0, Y: 0.0, Z: 0.0})
+		p := rkt.NewAxisAngleQuat(-5.0, rkt.Vec3{X: 1.0, Y: 0.0, Z: 0.0})
 		v.Ang = v.Ang.Product(p)
 	}
 	if key == glfw.KeyW && act == glfw.Press {
-		p := rkt.NewAxisAngleQuat(-0.1, rkt.Vec3{X: 0.0, Y: 1.0, Z: 0.0})
+		p := rkt.NewAxisAngleQuat(-5.0, rkt.Vec3{X: 0.0, Y: 1.0, Z: 0.0})
 		v.Ang = v.Ang.Product(p)
 	}
 	if key == glfw.KeyS && act == glfw.Press {
-		p := rkt.NewAxisAngleQuat(0.1, rkt.Vec3{X: 0.0, Y: 1.0, Z: 0.0})
+		p := rkt.NewAxisAngleQuat(5.0, rkt.Vec3{X: 0.0, Y: 1.0, Z: 0.0})
 		v.Ang = v.Ang.Product(p)
 	}
 }
