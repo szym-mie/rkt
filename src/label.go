@@ -12,7 +12,8 @@ const fontDy = 1.0 / 8.0
 
 type Label struct {
 	Pos   Vec3
-	Scale float32
+	Rot   Quat
+	Scale Vec2
 	len   int
 	geom  *Geom1
 }
@@ -27,7 +28,8 @@ func NewLabel(fontName string, len int) *Label {
 	t.len = len
 	t.geom = NewGeom1(texture, len*2)
 	copy(t.geom.Vertices, buildTextVertices(len))
-	t.Scale = 1.0
+	t.Rot = ZeroQuat()
+	t.Scale = Vec2{0.5, 1.0}
 	return t
 }
 
@@ -62,8 +64,9 @@ func (l *Label) Write(msg string) {
 func (l *Label) Draw() {
 	gl.MatrixMode(gl.MODELVIEW)
 	gl.PushMatrix()
-	l.Pos.apply()
-	gl.Scalef(l.Scale*0.5, l.Scale, 0.0)
+	l.Rot.Apply()
+	l.Pos.Apply()
+	gl.Scalef(l.Scale.X, l.Scale.Y, 0.0)
 	l.geom.draw()
 	gl.PopMatrix()
 }

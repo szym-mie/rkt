@@ -7,6 +7,9 @@ type AttachPt struct {
 	Lower Vec3 `json:"lower"`
 }
 
+type HullSpec struct {
+}
+
 type CtrlSpec struct {
 }
 
@@ -25,6 +28,15 @@ type EngineSpec struct {
 	CanShutdown bool     `json:"can_shutdown"`
 }
 
+// Aero table - AOA, 0 deg, 10 deg,...,180 deg
+// lift + drag vals
+// Ctrl src - player input, stage -> to deployed
+// State - 0.0 to 1.0
+// ChangeSpeed of State
+
+type AeroSpec struct {
+}
+
 type PartDef struct {
 	Name     string      `json:"name"`
 	TypeName string      `json:"type"`
@@ -38,6 +50,8 @@ type PartDef struct {
 
 func (d *PartDef) create() Part {
 	switch d.TypeName {
+	case "hull":
+		return d.createHull()
 	case "ctrl":
 		return d.createCtrl()
 	case "engine":
@@ -48,6 +62,14 @@ func (d *PartDef) create() Part {
 
 	log.Fatalf("create: unknown type %v", d.TypeName)
 	return nil
+}
+func (d *PartDef) createHull() *PartHull {
+	p := new(PartHull)
+	p.Def = d
+	p.Geom = d.buildGeom()
+	p.IsActive = false
+	p.IsDead = false
+	return p
 }
 func (d *PartDef) createCtrl() *PartCtrl {
 	p := new(PartCtrl)

@@ -1,14 +1,19 @@
 package rkt
 
-import "github.com/go-gl/gl/v2.1/gl"
+import (
+	"log"
+
+	"github.com/go-gl/gl/v2.1/gl"
+)
 
 type Vehicle struct {
-	Name     string
-	Parts    *PartNode
-	Mass     float32
-	Pos, Vel Vec3
-	Rot, Ang Quat
-	Stages   *StageNode
+	Name          string
+	Parts         *PartNode
+	Mass          float32
+	Height        float32
+	Pos, Vel, Ang Vec3
+	Rot           Quat
+	Stages        *StageNode
 }
 
 func NewVehicle(name string, root Part) *Vehicle {
@@ -17,15 +22,32 @@ func NewVehicle(name string, root Part) *Vehicle {
 	v.Parts = NewPartNode(root)
 	v.Stages = &StageNode{nil, nil}
 	v.Rot = ZeroQuat()
-	v.Ang = ZeroQuat()
+	v.UpdateHeight()
 	return v
 }
 
+func (v *Vehicle) Fork(nodes *PartNode) *Vehicle {
+	w := new(Vehicle)
+	w.Name = "_debris"
+	w.Parts = nodes
+	w.Stages = &StageNode{}
+	offset := nodes.Offset
+	for node := nodes; node != nil; node = node.Lower {
+		node.Offset = node.Offset.Sub(offset)
+	}
+
+	w.Pos = v.Pos.Add(v.Rot.Rotate(offset))
+	w.Vel = v.Vel
+	w.Rot = v.Rot
+	w.Ang = v.Ang
+	v.UpdateHeight()
+	return w
+}
 func (v *Vehicle) Draw() {
 	gl.MatrixMode(gl.MODELVIEW)
 	gl.PushMatrix()
-	v.Pos.apply()
-	v.Rot.apply()
+	v.Pos.Apply()
+	v.Rot.Apply()
 	node := v.Parts
 	for node != nil {
 		node.Part.draw(&node.Offset)
@@ -34,6 +56,8 @@ func (v *Vehicle) Draw() {
 	gl.PopMatrix()
 }
 func (v *Vehicle) Update(dt float32) {
+	v.UpdateHeight()
+
 	mass := float32(0.0)
 	for node := v.Parts; node != nil; node = node.Lower {
 		mass += node.Part.getMass()
@@ -45,19 +69,24 @@ func (v *Vehicle) Update(dt float32) {
 	}
 
 	v.Vel.Z -= 9.0 * dt
-	v.Pos = v.Pos.add(v.Vel.scale(dt))
-	if v.Pos.Z < 0.0 {
-		v.Pos.Z = 0.0
+	v.Pos = v.Pos.Add(v.Vel.Scale(dt))
+	if v.Pos.Z < v.Height {
+		v.Pos.Z = v.Height
 		v.Rot = ZeroQuat()
-		v.Ang = ZeroQuat()
+		v.Ang.X = 0.0
+		v.Ang.Y = 0.0
+		v.Ang.Z = 0.0
 		if v.Vel.Z < 0.0 {
 			v.Vel.X *= 0.8
 			v.Vel.Y *= 0.8
 			v.Vel.Z = 0.0
 		}
 	}
-	// TODO: scale the rotation by timestep
-	v.Rot = v.Rot.Product(ZeroQuat().Slerp(v.Ang, dt))
+	w := Quat{0.0, v.Ang.X, v.Ang.Y, v.Ang.Z}.Scale(dt / 2)
+	w.a += 1.0
+	v.Rot = w.Product(v.Rot).Norm()
+	// log.Println(v.Rot)
+	log.Printf("p/r/y %f/%f/%f\n", v.Rot.Pitch(), v.Rot.Roll(), v.Rot.Heading())
 }
 func (v *Vehicle) AddToStage(part Part) {
 	s := new(StageNode)
@@ -82,6 +111,27 @@ func (v *Vehicle) ApplyStage() {
 		}
 	}
 }
+func (v *Vehicle) UpdateHeight() {
+	last := v.Parts
+	for node := v.Parts; node != nil; node = node.Lower {
+		last = node
+	}
+	_, lAttachPt := last.Part.getAttachPts()
+	v.Height = -last.Offset.Z - lAttachPt.Z
+}
+
+// BEGIN STUPID
+var Vehicles []*Vehicle = make([]*Vehicle, 128)
+var vehiclesIndex uint = 0
+
+func (v *Vehicle) Link() {
+	if vehiclesIndex < 128 {
+		Vehicles[vehiclesIndex] = v
+		vehiclesIndex++
+	}
+}
+
+// END STUPID
 
 type PartNode struct {
 	Part         Part

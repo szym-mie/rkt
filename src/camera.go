@@ -32,8 +32,8 @@ func NewCamera(depthNear, depthFar float64, mouseSpeed float32) *Camera {
 func (c *Camera) SetViewport(width, height uint16) {
 	c.width = width
 	c.height = height
-	gl.PopMatrix()
 	gl.MatrixMode(gl.PROJECTION)
+	gl.PopMatrix()
 	gl.LoadIdentity()
 	f := float64(width)/float64(height) - 1.0
 	gl.Frustum(-1.0-f, 1.0+f, -1.0, 1.0, c.depthNear, c.depthFar)
@@ -52,7 +52,7 @@ func (c *Camera) Apply() {
 	gl.Translatef(c.Radius, 0.0, 0.0)
 	gl.Rotatef(-c.pitch, 0.0, 1.0, 0.0)
 	gl.Rotatef(c.yaw, 0.0, 0.0, 1.0)
-	c.FocusPos.apply()
+	c.FocusPos.Apply()
 }
 func (c *Camera) Update(mousePos Vec2) {
 	if c.Target != nil {
@@ -61,7 +61,7 @@ func (c *Camera) Update(mousePos Vec2) {
 		c.FocusPos.Z = -c.Target.Pos.Z
 	}
 
-	diffPos := mousePos.sub(c.lastMousePos)
+	diffPos := mousePos.Sub(c.lastMousePos)
 	c.lastMousePos = mousePos
 	c.yaw += diffPos.X / float32(c.width) * c.mouseSpeed
 	c.pitch += diffPos.Y / float32(c.height) * c.mouseSpeed

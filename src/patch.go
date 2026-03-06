@@ -74,7 +74,7 @@ func NewPatch(patchName string) *Patch {
 func (p *PatchObj) draw() {
 	gl.MatrixMode(gl.MODELVIEW)
 	gl.PushMatrix()
-	p.pos.apply()
+	p.pos.Apply()
 	p.geom.draw()
 	gl.PopMatrix()
 }
@@ -82,7 +82,7 @@ func (p *PatchObj) draw() {
 func (p *Patch) Draw() {
 	gl.MatrixMode(gl.MODELVIEW)
 	gl.PushMatrix()
-	p.Pos.apply()
+	p.Pos.Apply()
 	for _, obj := range p.objs {
 		obj.draw()
 	}

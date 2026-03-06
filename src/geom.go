@@ -157,7 +157,7 @@ func (g *Geom2) clone() *Geom2 {
 func (g *Geom2) draw() {
 	g.Texture0.bindTo(0)
 	g.Texture1.bindTo(1)
-	g.Texture0.filter(TextureFilterLinear)
+	g.Texture0.setFilter(TextureFilterLinear)
 	gl.Begin(gl.TRIANGLES)
 	for i := range g.Count {
 		v := g.Vertices[i]

@@ -1,0 +1,20 @@
+{
+    "name": "adapt1015",
+    "info": "",
+    "type": "hull",
+    "mass": 1500.0,
+    "body": {
+        "tapers": [{
+            "texture": "base/part/adapta",
+            "rings": 16,
+            "upper": { "offset": 1.0, "radius": 1.0 },
+            "lower": { "offset": -1.0, "radius": 1.5 }
+        }],
+        "planes": []
+    },
+    "attach": {
+        "upper": [0.0, 0.0, 1.0],
+        "lower": [0.0, 0.0, -1.0]
+    },
+    "ctrl": {}
+}

@@ -17,7 +17,7 @@ const (
 
 type Texture uint32
 
-func (t Texture) filter(filterType TextureFilter) {
+func (t Texture) setFilter(filterType TextureFilter) {
 	t.bind()
 	switch filterType {
 	case TextureFilterNearest:
@@ -27,6 +27,17 @@ func (t Texture) filter(filterType TextureFilter) {
 		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
 		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
 	}
+}
+func (t Texture) setRepeat(repeatEnable bool) {
+	t.bind()
+	var param int32
+	if repeatEnable {
+		param = gl.REPEAT
+	} else {
+		param = gl.CLAMP
+	}
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, param)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, param)
 }
 func (t Texture) bind() {
 	gl.ActiveTexture(gl.TEXTURE0)
@@ -49,9 +60,8 @@ func (b *Bitmap) createTexture() Texture {
 	gl.GenTextures(1, &handle)
 	texture := Texture(handle)
 	texture.bind()
-	texture.filter(TextureFilterNearest)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+	texture.setFilter(TextureFilterNearest)
+	texture.setRepeat(true)
 	gl.TexImage2D(
 		gl.TEXTURE_2D,
 		0,

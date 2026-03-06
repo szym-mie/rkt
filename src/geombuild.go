@@ -58,3 +58,33 @@ func buildTextVertices(len int) []Vec3 {
 
 	return textVts
 }
+
+func buildQuadVec2(lower Vec2, upper Vec2) []Vec2 {
+	pts := make([]Vec2, 6)
+	uu := upper
+	ll := lower
+	ul := Vec2{uu.X, ll.Y}
+	lu := Vec2{ll.X, uu.Y}
+	pts[0] = ll
+	pts[1] = ul
+	pts[2] = uu
+	pts[3] = uu
+	pts[4] = lu
+	pts[5] = ll
+	return pts
+}
+
+func buildQuadVec3(lower Vec3, upper Vec3) []Vec3 {
+	pts := make([]Vec3, 6)
+	uu := upper
+	ll := lower
+	ul := Vec3{uu.X, ll.Y, uu.Z}
+	lu := Vec3{ll.X, uu.Y, uu.Z}
+	pts[0] = ll
+	pts[1] = ul
+	pts[2] = uu
+	pts[3] = uu
+	pts[4] = lu
+	pts[5] = ll
+	return pts
+}

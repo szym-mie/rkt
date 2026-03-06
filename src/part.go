@@ -38,7 +38,7 @@ func (p *PartBase) GetName() string {
 	return p.Def.Name
 }
 func (p *PartBase) drawModel(offset *Vec3) {
-	offset.apply()
+	offset.Apply()
 	for _, g := range p.Geom {
 		g.draw()
 	}
@@ -49,6 +49,23 @@ func (p *PartBase) drawAttachPts() {
 }
 func (p *PartBase) Activate() {
 	p.IsActive = true
+}
+
+type PartHull struct {
+	PartBase
+}
+
+func (p *PartHull) draw(offset *Vec3) {
+	gl.MatrixMode(gl.MODELVIEW)
+	gl.PushMatrix()
+	p.drawModel(offset)
+	gl.PopMatrix()
+}
+func (p *PartHull) update(v *Vehicle, n *PartNode, dt float32) {
+	// do nothing
+}
+func (p *PartHull) getMass() float32 {
+	return p.Def.Mass
 }
 
 type PartCtrl struct {
@@ -96,8 +113,7 @@ func (p *PartEngine) update(v *Vehicle, n *PartNode, dt float32) {
 	if p.FuelMass > 0.0 {
 		force := e.FuelDef.Impulse * p.FuelFlow * dt
 		forceVec := Vec3{0.0, 0.0, force}
-		log.Printf("%v", v.Rot.rotate(forceVec))
-		v.Vel = v.Vel.add(v.Rot.rotate(forceVec).scale(1 / v.Mass))
+		v.Vel = v.Vel.Add(v.Rot.Rotate(forceVec).Scale(1 / v.Mass))
 		fuelCons := p.FuelFlow * dt
 		p.FuelMass -= min(fuelCons, p.FuelMass)
 		p.Plume.update(dt)
@@ -128,6 +144,10 @@ func (p *PartDecoup) update(v *Vehicle, n *PartNode, dt float32) {
 		n.Upper = nil
 		un.Lower = nil
 		// TODO: create new vehicle, apply force
+		nv := v.Fork(n)
+		fv := nv.Rot.Rotate(Vec3{0, 0, -10})
+		nv.Vel = nv.Vel.Add(fv)
+		nv.Link()
 		p.IsUsed = true
 	}
 }

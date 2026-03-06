@@ -18,43 +18,58 @@ func init() {
 	runtime.LockOSThread()
 }
 
-var v *rkt.Vehicle
+type GameMode uint
+
+const (
+	EditMode GameMode = iota + 1
+	PlayMode
+)
+
+var mainVehicle *rkt.Vehicle
 var radius float32
 
+const ctrlSpeed = 0.4
+
+func ctrlVector(axis rkt.VecAxis, scale float32) rkt.Vec3 {
+	comp := 1.0 * scale
+	switch axis {
+	case rkt.XAxis:
+		return rkt.Vec3{X: comp, Y: 0.0, Z: 0.0}
+	case rkt.YAxis:
+		return rkt.Vec3{X: 0.0, Y: comp, Z: 0.0}
+	case rkt.ZAxis:
+		return rkt.Vec3{X: 0.0, Y: 0.0, Z: comp}
+	}
+
+	return rkt.Vec3{}
+}
+
 func onKey(w *glfw.Window, key glfw.Key, sc int, act glfw.Action, mods glfw.ModifierKey) {
-	log.Printf("key: %s\n", glfw.GetKeyName(key, sc))
-	if key == glfw.KeyQ {
-		log.Printf("== quit ==")
-		w.SetShouldClose(true)
-	}
-	if key == glfw.KeySpace && act == glfw.Press {
-		log.Printf("== stage ==")
-		v.ApplyStage()
-	}
-	if key == glfw.KeyBackspace && act == glfw.Press {
-		radius = 10.0
-	}
-	if key == glfw.KeyEqual && act == glfw.Press {
-		radius *= 0.7
-	}
-	if key == glfw.KeyMinus && act == glfw.Press {
-		radius *= 1.2
-	}
-	if key == glfw.KeyA && act == glfw.Press {
-		p := rkt.NewAxisAngleQuat(5.0, rkt.Vec3{X: 1.0, Y: 0.0, Z: 0.0})
-		v.Ang = v.Ang.Product(p)
-	}
-	if key == glfw.KeyD && act == glfw.Press {
-		p := rkt.NewAxisAngleQuat(-5.0, rkt.Vec3{X: 1.0, Y: 0.0, Z: 0.0})
-		v.Ang = v.Ang.Product(p)
-	}
-	if key == glfw.KeyW && act == glfw.Press {
-		p := rkt.NewAxisAngleQuat(-5.0, rkt.Vec3{X: 0.0, Y: 1.0, Z: 0.0})
-		v.Ang = v.Ang.Product(p)
-	}
-	if key == glfw.KeyS && act == glfw.Press {
-		p := rkt.NewAxisAngleQuat(5.0, rkt.Vec3{X: 0.0, Y: 1.0, Z: 0.0})
-		v.Ang = v.Ang.Product(p)
+	if act == glfw.Press {
+		switch key {
+		case glfw.KeyEscape:
+			w.SetShouldClose(true)
+		case glfw.KeySpace:
+			mainVehicle.ApplyStage()
+		case glfw.KeyBackspace:
+			radius = 10.0
+		case glfw.KeyEqual:
+			radius *= 0.7
+		case glfw.KeyMinus:
+			radius *= 1.2
+		case glfw.KeyA:
+			mainVehicle.Ang = mainVehicle.Ang.Add(mainVehicle.Rot.Rotate(ctrlVector(rkt.XAxis, +ctrlSpeed)))
+		case glfw.KeyD:
+			mainVehicle.Ang = mainVehicle.Ang.Add(mainVehicle.Rot.Rotate(ctrlVector(rkt.XAxis, -ctrlSpeed)))
+		case glfw.KeyW:
+			mainVehicle.Ang = mainVehicle.Ang.Add(mainVehicle.Rot.Rotate(ctrlVector(rkt.YAxis, -ctrlSpeed)))
+		case glfw.KeyS:
+			mainVehicle.Ang = mainVehicle.Ang.Add(mainVehicle.Rot.Rotate(ctrlVector(rkt.YAxis, +ctrlSpeed)))
+		case glfw.KeyQ:
+			mainVehicle.Ang = mainVehicle.Ang.Add(mainVehicle.Rot.Rotate(ctrlVector(rkt.ZAxis, -ctrlSpeed)))
+		case glfw.KeyE:
+			mainVehicle.Ang = mainVehicle.Ang.Add(mainVehicle.Rot.Rotate(ctrlVector(rkt.ZAxis, +ctrlSpeed)))
+		}
 	}
 }
 
@@ -106,38 +121,42 @@ func main() {
 
 	rkt.LoadPkg("res/base.zip")
 
-	v = rkt.NewVehicle("test", rkt.NewPart("base/ctrl1"))
-	p := v.Parts
-	p = v.AttachBelow(p, rkt.NewPart("base/solid2"))
-	p = v.AttachBelow(p, rkt.NewPart("base/decoupa"))
-	v.AddStage()
-	p = v.AttachBelow(p, rkt.NewPart("base/solid2"))
-	camera.Target = v
+	mainVehicle = rkt.NewVehicle("test", rkt.NewPart("base/ctrl1"))
+	p := mainVehicle.Parts
+	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/decoupa"))
+	mainVehicle.AddStage()
+	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/solid101"))
+	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/decoupa"))
+	mainVehicle.AddStage()
+	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/solid102"))
+	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/decoupa"))
+	mainVehicle.AddStage()
+	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/adapt1015"))
+	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/solid153"))
+	mainVehicle.Link()
+
+	camera.Target = mainVehicle
 
 	patch := rkt.NewPatch("base/patch/00")
 	patch.Scale = 1600.0
-	patch.Pos.Z = -10.6
 
-	labelPressQ := rkt.NewLabelFor("base/font/anlg", "press 'q' to quit")
-	labelPressS := rkt.NewLabelFor("base/font/anlg", "press 's' to fire next stage")
-	labelUseZoom := rkt.NewLabelFor("base/font/anlg", "press '+/-' to zoom in/out")
-	labelUseMouse := rkt.NewLabelFor("base/font/anlg", "move mouse to look around")
+	labelWelcome := rkt.NewLabelFor("base/font/anlg", "Welcome")
+	labelToStage := rkt.NewLabelFor("base/font/anlg", "press Space to fire the next stage")
 
-	labelPressQ.Scale = 1.0
-	labelPressS.Scale = 1.0
-	labelUseZoom.Scale = 1.0
-	labelUseMouse.Scale = 1.0
+	qt := rkt.NewAxisAngleQuat(90.0, rkt.Vec3{X: 1.0, Y: 0.0, Z: 0.0})
+	qt = qt.Product(rkt.NewAxisAngleQuat(-90, rkt.Vec3{X: 0.0, Y: 1.0, Z: 0.0}))
 
-	labelPressQ.Pos.Y = 6.0
-	labelPressQ.Pos.Z = -6.0
-	labelPressS.Pos.Y = 5.0
-	labelPressS.Pos.Z = -6.0
-	labelUseZoom.Pos.Y = 4.0
-	labelUseZoom.Pos.Z = -6.0
-	labelUseMouse.Pos.Y = 3.0
-	labelUseMouse.Pos.Z = -6.0
+	labelWelcome.Scale = rkt.Vec2{X: 6.0, Y: 8.0}
+	labelWelcome.Rot = qt
+	labelWelcome.Pos.Y = 68.0
+	labelWelcome.Pos.Z = -168.0 + 0.1
 
-	n := v.Stages
+	labelToStage.Scale = rkt.Vec2{X: 2.5, Y: 5.0}
+	labelToStage.Rot = rkt.NewAxisAngleQuat(90.0, rkt.Vec3{X: 1.0, Y: 0.0, Z: 0.0})
+	labelToStage.Pos.Y = 25.0
+	labelToStage.Pos.Z = -80.0
+
+	n := mainVehicle.Stages
 	for n != nil {
 		name := "<sep>"
 		if n.Part != nil {
@@ -160,19 +179,22 @@ func main() {
 		gl.MatrixMode(gl.MODELVIEW)
 		gl.LoadIdentity()
 
-		log.Printf("pz %v vz %v", v.Pos.Z, v.Vel.Z)
+		//log.Printf("pz %v vz %v", v.Pos.Z, v.Vel.Z)
 
 		dt := time.Millisecond * 50
 
 		patch.Draw()
-		v.Draw()
+		for _, v := range rkt.Vehicles {
+			if v == nil {
+				break
+			}
+			v.Draw()
+			v.Update(float32(dt.Seconds()))
+		}
 
-		labelPressQ.Draw()
-		labelPressS.Draw()
-		labelUseZoom.Draw()
-		labelUseMouse.Draw()
-
-		v.Update(float32(dt.Seconds()))
+		// last because transparency
+		labelWelcome.Draw()
+		labelToStage.Draw()
 
 		time.Sleep(dt)
 

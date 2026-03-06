@@ -2,6 +2,8 @@ package rkt
 
 import (
 	"log"
+
+	"github.com/go-gl/gl/v2.1/gl"
 )
 
 type PlumeDef struct {
@@ -51,7 +53,8 @@ type Plume struct {
 }
 
 func (p *Plume) draw() {
-	p.offset.apply()
+	p.offset.Apply()
+	gl.Scalef(p.size, p.size, p.size)
 	p.geom.drawTexOffset(Vec2{p.texOffset, 0.0})
 }
 func (p *Plume) update(dt float32) {

@@ -1,0 +1,37 @@
+{
+    "name": "solid101",
+    "info": "",
+    "type": "engine",
+    "mass": 800.0,
+    "body": {
+        "tapers": [{
+            "texture": "base/part/solida",
+            "rings": 16,
+            "upper": { "offset": 1.0, "radius": 1.0 },
+            "lower": { "offset": -1.0, "radius": 1.0 }
+        }, {
+            "texture": "base/part/nozzlea",
+            "rings": 16,
+            "upper": { "offset": -1.0, "radius": 0.6 },
+            "lower": { "offset": -1.6, "radius": 0.8 }
+        }],
+        "planes": []
+    },
+    "attach": {
+        "upper": [0.0, 0.0, 1.0],
+        "lower": [0.0, 0.0, -1.6]
+    },
+    "engine": {
+        "fuel": {
+            "mass": 4000.0,
+            "impulse": 205.0,
+            "flow": 2000.0
+        },
+        "plume": {
+            "texture": "base/part/plume1",
+            "offset": [0.0, 0.0, -1.0],
+            "size": 1.0
+        },
+        "can_shutdown": false
+    }
+}

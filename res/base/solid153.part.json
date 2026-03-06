@@ -1,0 +1,37 @@
+{
+    "name": "solid153",
+    "info": "",
+    "type": "engine",
+    "mass": 3000.0,
+    "body": {
+        "tapers": [{
+            "texture": "base/part/solida",
+            "rings": 16,
+            "upper": { "offset": 3.0, "radius": 1.5 },
+            "lower": { "offset": -3.0, "radius": 1.5 }
+        }, {
+            "texture": "base/part/nozzlea",
+            "rings": 16,
+            "upper": { "offset": -3.0, "radius": 1.0 },
+            "lower": { "offset": -4.0, "radius": 1.3 }
+        }],
+        "planes": []
+    },
+    "attach": {
+        "upper": [0.0, 0.0, 3.0],
+        "lower": [0.0, 0.0, -4.0]
+    },
+    "engine": {
+        "fuel": {
+            "mass": 32000.0,
+            "impulse": 215.0,
+            "flow": 4000.0
+        },
+        "plume": {
+            "texture": "base/part/plume1",
+            "offset": [0.0, 0.0, -3.0],
+            "size": 2.0
+        },
+        "can_shutdown": false
+    }
+}

@@ -11,21 +11,19 @@ type Quat struct {
 }
 
 func NewAxisAngleQuat(theta float32, axis Vec3) Quat {
-	rad := float64(theta) / 90 * math.Pi
-	a := float32(math.Cos(rad))
-	s := float32(math.Sin(rad))
+	rad := float64(theta) / 180 * math.Pi
+	a := float32(math.Cos(rad * 0.5))
+	s := float32(math.Sin(rad * 0.5))
 	return Quat{a, axis.X * s, axis.Y * s, axis.Z * s}
 }
 
 func ZeroQuat() Quat {
 	return Quat{1.0, 0.0, 0.0, 0.0}
 }
-
 func (q Quat) conj() Quat {
 	return Quat{q.a, -q.b, -q.c, -q.d}
 }
-
-func (q Quat) norm() Quat {
+func (q Quat) Norm() Quat {
 	sum := float64(q.a*q.a + q.b*q.b + q.c*q.c + q.d*q.d)
 	m := float32(math.Sqrt(sum))
 	if m < 0.0001 {
@@ -34,7 +32,12 @@ func (q Quat) norm() Quat {
 
 	return Quat{q.a / m, q.b / m, q.c / m, q.d / m}
 }
-
+func (q Quat) Add(p Quat) Quat {
+	return Quat{q.a + p.a, q.b + p.b, q.c + p.c, q.d + p.d}
+}
+func (q Quat) Scale(k float32) Quat {
+	return Quat{q.a * k, q.b * k, q.c * k, q.d * k}
+}
 func (q Quat) Product(p Quat) Quat {
 	a := q.a*p.a - q.b*p.b - q.c*p.c - q.d*p.d
 	b := q.a*p.b + q.b*p.a + q.c*p.d - q.d*p.c
@@ -42,7 +45,6 @@ func (q Quat) Product(p Quat) Quat {
 	d := q.a*p.d + q.b*p.c - q.c*p.b + q.d*p.a
 	return Quat{a, b, c, d}
 }
-
 func (q Quat) Slerp(p Quat, w float32) Quat {
 	cht := float64(q.a*p.a + q.b*p.b + q.c*p.c + q.d*p.d)
 	if cht >= 1.0 || cht <= -1.0 {
@@ -68,18 +70,15 @@ func (q Quat) Slerp(p Quat, w float32) Quat {
 	d := q.d*rq + p.d*rp
 	return Quat{a, b, c, d}
 }
-
 func (q Quat) ZeroSlerp(w float32) Quat {
 	return q.Slerp(ZeroQuat(), w)
 }
-
-func (q Quat) rotate(v Vec3) Vec3 {
+func (q Quat) Rotate(v Vec3) Vec3 {
 	p := Quat{0.0, v.X, v.Y, v.Z}
 	o := q.Product(p).Product(q.conj())
 	return Vec3{o.b, o.c, o.d}
 }
-
-func (q Quat) apply() {
+func (q Quat) Apply() {
 	xw := 2 * q.b * q.a
 	xx := 2 * q.b * q.b
 	xy := 2 * q.b * q.c
@@ -97,4 +96,46 @@ func (q Quat) apply() {
 		0.0, 0.0, 0.0, 1.0,
 	}
 	gl.MultMatrixf(&v[0])
+}
+
+// order or Euler axis vectors: Z (roll), Y (pitch), X (heading)
+/*
+x - heading
+y - pitch
+z - roll
+
+y = asin(te8)
+if abs(te8) < 0.999999:
+x = atan2(-te9, te10)
+z = atan2(-te4, te0)
+else:
+x = atan2(te6, te5)
+z = 0
+
+te0 = 1.0 - 2*q.c*q.c - 2*q.d*q.d
+te1 = 2*q.b*q.c + 2*q.a*q.d
+te2 = 2*q.b*q.d - 2*q.a*q.c
+te4 = 2*q.b*q.c - 2*q.a*q.d
+te5 = 1.0 - 2*q.b*q.b - 2*q.d*q.d
+te6 = 2*q.c*q.d + 2*q.a*q.b
+te8 = 2*q.b*q.d + 2*q.a*q.c
+te9 = 2*q.c*q.d - 2*q.a*q.b
+te10 = 1.0 - 2*q.b*q.b - 2*q.c*q.c
+*/
+func (q Quat) Heading() float32 {
+	x := float64(2*q.c*q.d - 2*q.a*q.b)
+	rad := math.Asin(-x)
+	return float32(rad * 180 / math.Pi)
+}
+func (q Quat) Pitch() float32 {
+	y := float64(2*q.b*q.d + 2*q.a*q.c)
+	x := float64(1.0 - 2*q.b*q.b - 2*q.c*q.c)
+	rad := math.Atan2(y, x)
+	return float32(rad * 180 / math.Pi)
+}
+func (q Quat) Roll() float32 {
+	y := float64(2*q.b*q.c + 2*q.a*q.d)
+	x := float64(1.0 - 2*q.b*q.b - 2*q.d*q.d)
+	rad := math.Atan2(y, x)
+	return float32(rad * 180 / math.Pi)
 }

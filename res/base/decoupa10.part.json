@@ -1,5 +1,5 @@
 {
-    "name": "decoupa",
+    "name": "decoupa1",
     "info": "",
     "type": "decoup",
     "mass": 400.0,
@@ -13,7 +13,7 @@
         "planes": []
     },
     "attach": {
-        "upper": [0.0, 0.0, 0.2],
+        "upper": [0.0, 0.0, 0.8],
         "lower": [0.0, 0.0, -0.2]
     },
     "decoup": {
