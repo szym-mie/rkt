@@ -121,21 +121,47 @@ te6 = 2*q.c*q.d + 2*q.a*q.b
 te8 = 2*q.b*q.d + 2*q.a*q.c
 te9 = 2*q.c*q.d - 2*q.a*q.b
 te10 = 1.0 - 2*q.b*q.b - 2*q.c*q.c
+z = asin(te1)
+if abs(te1) < 0.999999:
+x = atan2(-te9, te5)
+y = atan2(-te2, te0)
+else:
+x = 0
+y = atan2(te8, te10)
 */
+/*
 func (q Quat) Heading() float32 {
-	x := float64(2*q.c*q.d - 2*q.a*q.b)
-	rad := math.Asin(-x)
+	y := float64(2*q.c*q.b - 2*q.a*q.d)
+	x := float64(1.0 - 2*q.b*q.b - 2*q.d*q.d)
+	rad := math.Atan2(-y, x)
 	return float32(rad * 180 / math.Pi)
 }
 func (q Quat) Pitch() float32 {
-	y := float64(2*q.b*q.d + 2*q.a*q.c)
-	x := float64(1.0 - 2*q.b*q.b - 2*q.c*q.c)
-	rad := math.Atan2(y, x)
-	return float32(rad * 180 / math.Pi)
+	y := float64(2*q.b*q.d - 2*q.a*q.c)
+	x := float64(1.0 - 2*q.c*q.c - 2*q.b*q.b)
+	rad := math.Atan2(-y, x)
+	return float32(rad*180/math.Pi) + 90
 }
 func (q Quat) Roll() float32 {
-	y := float64(2*q.b*q.c + 2*q.a*q.d)
+	x := float64(2*q.d*q.c + 2*q.a*q.b)
+	rad := math.Asin(x)
+	return float32(rad * 180 / math.Pi)
+}
+*/
+func (q Quat) Heading() float32 {
+	y := float64(2*q.c*q.b - 2*q.a*q.d)
 	x := float64(1.0 - 2*q.b*q.b - 2*q.d*q.d)
-	rad := math.Atan2(y, x)
+	rad := math.Atan2(-y, x)
+	return float32(rad * 180 / math.Pi)
+}
+func (q Quat) Pitch() float32 {
+	y := float64(2*q.b*q.d - 2*q.a*q.c)
+	x := float64(1.0 - 2*q.c*q.c - 2*q.b*q.b)
+	rad := math.Atan2(-y, x)
+	return float32(rad*180/math.Pi) + 90
+}
+func (q Quat) Roll() float32 {
+	x := float64(2*q.d*q.c + 2*q.a*q.b)
+	rad := math.Asin(x)
 	return float32(rad * 180 / math.Pi)
 }

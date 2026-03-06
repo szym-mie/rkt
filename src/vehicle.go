@@ -1,8 +1,6 @@
 package rkt
 
 import (
-	"log"
-
 	"github.com/go-gl/gl/v2.1/gl"
 )
 
@@ -86,7 +84,7 @@ func (v *Vehicle) Update(dt float32) {
 	w.a += 1.0
 	v.Rot = w.Product(v.Rot).Norm()
 	// log.Println(v.Rot)
-	log.Printf("p/r/y %f/%f/%f\n", v.Rot.Pitch(), v.Rot.Roll(), v.Rot.Heading())
+	// log.Printf("p/r/y %f/%f/%f\n", v.Rot.Pitch(), v.Rot.Roll(), v.Rot.Heading())
 }
 func (v *Vehicle) AddToStage(part Part) {
 	s := new(StageNode)

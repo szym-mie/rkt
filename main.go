@@ -113,13 +113,16 @@ func main() {
 	rkt.InitTextureUnit(1)
 	rkt.InitTextureUnit(2)
 
+	rkt.LoadPkg("res/base.zip")
+
+	hud := rkt.NewHud()
+	hud.SetViewport(w, h)
+
 	camera := rkt.NewCamera(1.0, 8000.0, 100.0)
 	camera.SetViewport(w, h)
 	camera.CaptureMouse(window)
 
 	radius = 10.0
-
-	rkt.LoadPkg("res/base.zip")
 
 	mainVehicle = rkt.NewVehicle("test", rkt.NewPart("base/ctrl1"))
 	p := mainVehicle.Parts
@@ -173,6 +176,7 @@ func main() {
 
 		x, y := window.GetCursorPos()
 		mousePos := rkt.Vec2{X: float32(x), Y: float32(y)}
+		camera.SetProjection()
 		camera.Update(mousePos)
 		camera.Apply()
 
@@ -195,6 +199,8 @@ func main() {
 		// last because transparency
 		labelWelcome.Draw()
 		labelToStage.Draw()
+
+		hud.Draw(mainVehicle.Rot)
 
 		time.Sleep(dt)
 

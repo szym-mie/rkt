@@ -77,3 +77,13 @@ func (v Vec3) Norm() Vec3 {
 
 	return v.Scale(1 / lenSqr)
 }
+
+func Clamp(x float32, min, max float32) float32 {
+	if x < min {
+		return min
+	}
+	if x > max {
+		return max
+	}
+	return x
+}

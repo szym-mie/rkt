@@ -32,16 +32,18 @@ func NewCamera(depthNear, depthFar float64, mouseSpeed float32) *Camera {
 func (c *Camera) SetViewport(width, height uint16) {
 	c.width = width
 	c.height = height
+	c.SetProjection()
+}
+func (c *Camera) SetProjection() {
 	gl.MatrixMode(gl.PROJECTION)
 	gl.PopMatrix()
 	gl.LoadIdentity()
-	f := float64(width)/float64(height) - 1.0
+	f := float64(c.width)/float64(c.height) - 1.0
 	gl.Frustum(-1.0-f, 1.0+f, -1.0, 1.0, c.depthNear, c.depthFar)
 	gl.Rotatef(90.0, 0.0, 0.0, 1.0) // y <-> z
 	gl.Rotatef(90.0, 0.0, 1.0, 0.0) // y <-> z
 	gl.PushMatrix()
 }
-
 func (c *Camera) CaptureMouse(window *glfw.Window) {
 	window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
 }

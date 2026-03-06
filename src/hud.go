@@ -2,6 +2,7 @@ package rkt
 
 import (
 	"log"
+	"math"
 
 	"github.com/go-gl/gl/v2.1/gl"
 )
@@ -9,67 +10,85 @@ import (
 type Hud struct {
 	width  uint16
 	height uint16
-	vdi    *Vdi
+	adi    *Adi
 }
 
-type Vdi struct {
-	pos       Vec2
+type Adi struct {
+	pos       Vec3
 	scale     float32
 	tapeGeom  *Geom1
-	datumGeom *Geom1
+	frameGeom *Geom1
 }
 
-const vdiTapeName = "base/hud/vditape"
-const vdiDatumName = "base/hud/vdidatum"
+const adiTapeGeomName = "base/geom/aditape"
+const adiFrameGeomName = "base/geom/adiframe"
 
-func (c *Hud) SetViewport(width, height uint16) {
-	c.width = width
-	c.height = height
+func NewHud() *Hud {
+	h := new(Hud)
+	h.adi = buildAdi()
+	return h
+}
+
+func (h *Hud) SetViewport(width, height uint16) {
+	h.width = width
+	h.height = height
+	h.SetProjection()
+}
+func (h *Hud) SetProjection() {
 	gl.MatrixMode(gl.PROJECTION)
 	gl.PopMatrix()
 	gl.LoadIdentity()
-	f := float64(width)/float64(height) - 1.0
+	f := float64(h.width)/float64(h.height) - 1.0
 	// same as default projection, but with aspect correction
 	gl.Ortho(-1.0-f, 1.0+f, -1.0, 1.0, -1.0, 1.0)
 	gl.PushMatrix()
 }
-
-func NewHud() *Hud {
-	h := new(Hud)
-	h.vdi = buildVdi()
-	return h
+func (h *Hud) Draw(input Quat) {
+	h.SetProjection()
+	h.adi.draw(input)
 }
 
-func buildVdi() *Vdi {
-	v := new(Vdi)
-	v.pos = Vec2{-0.9, -0.9}
+func buildAdi() *Adi {
+	v := new(Adi)
+	v.pos = Vec3{-0.8, -0.8, 0.0}
 	v.scale = 0.2
 
-	tapeTexture, ok := textureMap[vdiTapeName]
+	tapeGeomDef, ok := geom1DefMap[adiTapeGeomName]
 	if !ok {
-		log.Fatalf("build_vdi: no such texture %s\n", vdiTapeName)
+		log.Fatalf("build_adi: no such geom1def %s\n", adiTapeGeomName)
 	}
-	tapeTexture.setRepeat(false)
-	v.tapeGeom = NewGeom1(tapeTexture, 2)
-	v.tapeGeom.Vertices = buildQuadVec3(
-		Vec3{-4.0, -4.0, 0.0}, Vec3{4.0, 4.0, 0.0})
-	v.tapeGeom.TexCoords = buildQuadVec2(
-		Vec2{-1.5, -1.5}, Vec2{2.5, 2.5})
 
-	datumTexture, ok := textureMap[vdiDatumName]
+	frameGeomDef, ok := geom1DefMap[adiFrameGeomName]
 	if !ok {
-		log.Fatalf("build_vdi: no such texture %s\n", vdiDatumName)
+		log.Fatalf("build_adi: no such geom1def %s\n", adiFrameGeomName)
 	}
-	datumTexture.setRepeat(false)
-	v.datumGeom = NewGeom1(datumTexture, 2)
-	v.datumGeom.Vertices = buildQuadVec3(
-		Vec3{-1.0, -1.0, 0.0}, Vec3{1.0, 1.0, 0.0})
-	v.datumGeom.TexCoords = buildQuadVec2(
-		Vec2{0.0, 0.0}, Vec2{1.0, 1.0})
+
+	v.tapeGeom = tapeGeomDef.create()
+	v.frameGeom = frameGeomDef.create()
 	return v
 }
 
-func (v *Vdi) draw(input Quat) {
-	// roll := input.Roll()
-	// pitch := input.Pitch()
+func (v *Adi) draw(input Quat) {
+	gl.MatrixMode(gl.MODELVIEW)
+	gl.PushMatrix()
+	gl.LoadIdentity()
+	v.pos.Apply()
+	pr := input.Rotate(Vec3{0, 0, 1})
+	up := input.Rotate(Vec3{1, 0, 0})
+	lf := input.Rotate(Vec3{0, 1, 0})
+	pitch := math.Asin(float64(Clamp(pr.Z, -1.0, 1.0)))
+	roll := -math.Atan2(float64(lf.Z), float64(up.Z))
+	yaw := -math.Atan2(float64(pr.X), float64(pr.Y))
+	gl.Rotated(roll/math.Pi*180, 0.0, 0.0, 1.0)
+	gl.Rotated((pitch-math.Pi*0.5)/math.Pi*180, 1.0, 0.0, 0.0)
+	gl.Rotated(yaw/math.Pi*180, 0.0, 0.0, 1.0)
+	gl.Scalef(v.scale, v.scale, v.scale)
+	v.tapeGeom.draw()
+	gl.PopMatrix()
+
+	gl.PushMatrix()
+	v.pos.Add(Vec3{Z: 1.0}).Apply()
+	gl.Scalef(v.scale, v.scale, v.scale)
+	v.frameGeom.draw()
+	gl.PopMatrix()
 }
