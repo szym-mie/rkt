@@ -40,15 +40,16 @@ func loadPartDef(r io.Reader) *PartDef {
 	}
 
 	if def.Body == nil {
-		log.Fatalf("part_def: no body in JSON")
+		log.Fatalf("part_def: no body in %s JSON", def.Name)
 	}
 
 	if def.Attach == nil {
-		log.Fatalf("part_def: no attach in JSON")
+		log.Fatalf("part_def: no attach in %s JSON", def.Name)
 	}
 
-	if def.Ctrl == nil && def.Decoup == nil && def.Engine == nil {
-		log.Fatalf("part_def: no spec field: ctrl/decoup/engine in JSON")
+	if def.Ctrl == nil && def.Decoup == nil &&
+		def.Engine == nil && def.Chute == nil {
+		log.Fatalf("part_def: no spec field in %s JSON", def.Name)
 	}
 
 	return def

@@ -3,6 +3,12 @@
     "info": "",
     "type": "engine",
     "mass": 800.0,
+    "aero": {
+        "drag": {
+            "aoas": [0.0, 90.0, 180.0],
+            "vals": [0.6, 1.2, 0.8]
+        }
+    },
     "body": {
         "tapers": [{
             "texture": "base/part/solida",

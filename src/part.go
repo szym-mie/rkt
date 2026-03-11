@@ -11,6 +11,7 @@ type Part interface {
 	draw(offset *Vec3)
 	update(v *Vehicle, n *PartNode, dt float32)
 	getMass() float32
+	getDrag(aoa float32) float32
 	getAttachPts() (Vec3, Vec3)
 	GetName() string
 	Activate()
@@ -50,6 +51,12 @@ func (p *PartBase) drawAttachPts() {
 func (p *PartBase) Activate() {
 	p.IsActive = true
 }
+func (p *PartBase) getMass() float32 {
+	return p.Def.Mass
+}
+func (p *PartBase) getDrag(aoa float32) float32 {
+	return p.Def.Aero.Area * 0.5
+}
 
 type PartHull struct {
 	PartBase
@@ -63,9 +70,6 @@ func (p *PartHull) draw(offset *Vec3) {
 }
 func (p *PartHull) update(v *Vehicle, n *PartNode, dt float32) {
 	// do nothing
-}
-func (p *PartHull) getMass() float32 {
-	return p.Def.Mass
 }
 
 type PartCtrl struct {
@@ -81,8 +85,30 @@ func (p *PartCtrl) draw(offset *Vec3) {
 func (p *PartCtrl) update(v *Vehicle, n *PartNode, dt float32) {
 	// TODO: do nothing?
 }
-func (p *PartCtrl) getMass() float32 {
-	return p.Def.Mass
+
+type PartDecoup struct {
+	PartBase
+	IsUsed bool
+}
+
+func (p *PartDecoup) draw(offset *Vec3) {
+	gl.MatrixMode(gl.MODELVIEW)
+	gl.PushMatrix()
+	p.drawModel(offset)
+	gl.PopMatrix()
+}
+func (p *PartDecoup) update(v *Vehicle, n *PartNode, dt float32) {
+	if p.IsActive && !p.IsUsed {
+		un := n.Upper
+		n.Upper = nil
+		un.Lower = nil
+		// TODO: create new vehicle, apply force
+		nv := v.Fork(n)
+		fv := nv.Rot.Rotate(Vec3{0, 0, -10})
+		nv.Vel = nv.Vel.Add(fv)
+		nv.Link()
+		p.IsUsed = true
+	}
 }
 
 type PartEngine struct {
@@ -127,32 +153,67 @@ func (p *PartEngine) getMass() float32 {
 	return p.Def.Mass + p.FuelMass
 }
 
-type PartDecoup struct {
+type PartChute struct {
 	PartBase
-	IsUsed bool
+	IsUsed       bool
+	IsCut        bool
+	ExtraDrag    float32
+	ChuteGeom    *Geom1
+	ChuteAntiRot Quat
+	ChuteRot     Quat
+	DeployTime   float32
+	Height       float32
 }
 
-func (p *PartDecoup) draw(offset *Vec3) {
+func (p *PartChute) draw(offset *Vec3) {
 	gl.MatrixMode(gl.MODELVIEW)
 	gl.PushMatrix()
 	p.drawModel(offset)
+	h := p.Height
+	p.ChuteAntiRot.Apply()
+	p.ChuteRot.Conj().Apply()
+	gl.Scalef(h, h, h)
+	if p.IsActive && !p.IsCut {
+		p.ChuteGeom.draw()
+	}
+
 	gl.PopMatrix()
 }
-func (p *PartDecoup) update(v *Vehicle, n *PartNode, dt float32) {
-	if p.IsActive && !p.IsUsed {
-		un := n.Upper
-		n.Upper = nil
-		un.Lower = nil
-		// TODO: create new vehicle, apply force
-		nv := v.Fork(n)
-		fv := nv.Rot.Rotate(Vec3{0, 0, -10})
-		nv.Vel = nv.Vel.Add(fv)
-		nv.Link()
-		p.IsUsed = true
+func (p *PartChute) update(v *Vehicle, n *PartNode, dt float32) {
+	c := p.Def.Chute
+	if p.IsActive && !p.IsCut {
+		p.ChuteAntiRot = v.Rot.Conj()
+		p.ChuteRot = NewVecDiffQuat(v.Vel, Vec3{0, 0, -1}).Norm()
+		if p.IsUsed {
+			p.DeployTime += dt
+		} else {
+			p.DeployTime = 0
+			p.IsUsed = true
+		}
+	}
+
+	if p.IsUsed && v.Vel.LenSq() < 0.5 {
+		p.IsCut = true
+		p.DeployTime = 0.0
+	}
+
+	deployFrac := p.DeployTime / c.DeployTime
+	if deployFrac > 1.0 {
+		deployFrac = 1.0
+	}
+
+	p.Height = deployFrac * c.Height
+	dragMag := deployFrac * deployFrac * c.Area * c.Drag * v.Vel.LenSq() * 0.5
+	dragAcc := -dragMag / v.Mass * dt
+	if v.Vel.Len() > 1.0 {
+		v.Vel = v.Vel.Scale(1.0 + dragAcc/v.Vel.Len())
 	}
 }
-func (p *PartDecoup) getMass() float32 {
-	return p.Def.Mass
+func (p *PartChute) getMass() float32 {
+	return p.Def.Mass + p.Def.Chute.Mass
+}
+func (p *PartChute) getDrag(aoa float32) float32 {
+	return p.PartBase.getDrag(aoa) + p.ExtraDrag
 }
 
 type PartWing struct {
@@ -168,7 +229,4 @@ func (p *PartWing) draw(offset *Vec3) {
 }
 func (p *PartWing) update(v *Vehicle, n *PartNode, dt time.Duration) {
 	// TODO: no aerodynamics yet
-}
-func (p *PartWing) getMass() float32 {
-	return p.Def.Mass
 }

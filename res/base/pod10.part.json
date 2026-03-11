@@ -1,13 +1,20 @@
 {
-    "name": "ctrl1",
+    "name": "pod10",
     "info": "",
     "type": "ctrl",
     "mass": 3000.0,
+    "aero": {
+        "area": 3.1,
+        "drag": {
+            "aoas": [0.0, 90.0, 180.0],
+            "vals": [0.4, 0.6, 1.2]
+        }
+    },
     "body": {
         "tapers": [{
-            "texture": "base/part/ctrl1",
+            "texture": "base/part/pod10",
             "rings": 16,
-            "upper": { "offset": 1.0, "radius": 0.4 },
+            "upper": { "offset": 1.0, "radius": 0.5 },
             "lower": { "offset": -1.0, "radius": 1.0 }
         }],
         "planes": []

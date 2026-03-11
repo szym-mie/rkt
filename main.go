@@ -124,24 +124,27 @@ func main() {
 
 	radius = 10.0
 
-	mainVehicle = rkt.NewVehicle("test", rkt.NewPart("base/ctrl1"))
+	mainVehicle = rkt.NewVehicle("test", rkt.NewPart("base/pod10"))
 	p := mainVehicle.Parts
+	mainVehicle.AttachAbove(p, rkt.NewPart("base/chute05"))
 	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/decoupa"))
 	mainVehicle.AddStage()
 	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/solid101"))
-	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/decoupa"))
-	mainVehicle.AddStage()
-	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/solid102"))
-	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/decoupa"))
-	mainVehicle.AddStage()
-	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/adapt1015"))
-	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/solid153"))
+	// p = mainVehicle.AttachBelow(p, rkt.NewPart("base/decoupa"))
+	// mainVehicle.AddStage()
+	// p = mainVehicle.AttachBelow(p, rkt.NewPart("base/solid102"))
+	// p = mainVehicle.AttachBelow(p, rkt.NewPart("base/decoupa"))
+	// mainVehicle.AddStage()
+	// p = mainVehicle.AttachBelow(p, rkt.NewPart("base/adapt1015"))
+	// p = mainVehicle.AttachBelow(p, rkt.NewPart("base/solid153"))
 	mainVehicle.Link()
 
 	camera.Target = mainVehicle
 
-	patch := rkt.NewPatch("base/patch/00")
-	patch.Scale = 1600.0
+	patch00 := rkt.NewPatch("base/patch/00")
+	patch00.Scale = 1600.0
+	patchInf := rkt.NewPatch("base/patch/inf")
+	patchInf.Scale = 1600.0
 
 	labelWelcome := rkt.NewLabelFor("base/font/anlg", "Welcome")
 	labelToStage := rkt.NewLabelFor("base/font/anlg", "press Space to fire the next stage")
@@ -187,7 +190,8 @@ func main() {
 
 		dt := time.Millisecond * 50
 
-		patch.Draw()
+		patch00.Draw()
+		patchInf.Draw()
 		for _, v := range rkt.Vehicles {
 			if v == nil {
 				break

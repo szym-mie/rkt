@@ -46,10 +46,11 @@ func (v *Vehicle) Draw() {
 	gl.PushMatrix()
 	v.Pos.Apply()
 	v.Rot.Apply()
-	node := v.Parts
-	for node != nil {
+	for node := v.Parts; node != nil; node = node.Lower {
 		node.Part.draw(&node.Offset)
-		node = node.Lower
+	}
+	for node := v.Parts.Upper; node != nil; node = node.Upper {
+		node.Part.draw(&node.Offset)
 	}
 	gl.PopMatrix()
 }
@@ -60,9 +61,15 @@ func (v *Vehicle) Update(dt float32) {
 	for node := v.Parts; node != nil; node = node.Lower {
 		mass += node.Part.getMass()
 	}
+	for node := v.Parts.Upper; node != nil; node = node.Upper {
+		mass += node.Part.getMass()
+	}
 
 	v.Mass = mass
 	for node := v.Parts; node != nil; node = node.Lower {
+		node.Part.update(v, node, dt)
+	}
+	for node := v.Parts.Upper; node != nil; node = node.Upper {
 		node.Part.update(v, node, dt)
 	}
 
@@ -94,6 +101,10 @@ func (v *Vehicle) AddToStage(part Part) {
 }
 func (v *Vehicle) AddStage() {
 	v.AddToStage(nil)
+}
+func (v *Vehicle) AttachAbove(node *PartNode, part Part) *PartNode {
+	v.AddToStage(part)
+	return node.AttachAbove(part)
 }
 func (v *Vehicle) AttachBelow(node *PartNode, part Part) *PartNode {
 	v.AddToStage(part)
@@ -143,6 +154,17 @@ func NewPartNode(part Part) *PartNode {
 	return n
 }
 
+func (n *PartNode) AttachAbove(part Part) *PartNode {
+	p := NewPartNode(part)
+	// link both parts
+	n.Upper = p
+	p.Lower = n
+	// calculate offset based on attachment points (height only for now)
+	nAttachPt, _ := n.Part.getAttachPts()
+	_, pAttachPt := part.getAttachPts()
+	p.Offset.Z = n.Offset.Z + nAttachPt.Z - pAttachPt.Z
+	return p
+}
 func (n *PartNode) AttachBelow(part Part) *PartNode {
 	p := NewPartNode(part)
 	// link both parts

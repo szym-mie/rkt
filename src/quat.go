@@ -17,10 +17,27 @@ func NewAxisAngleQuat(theta float32, axis Vec3) Quat {
 	return Quat{a, axis.X * s, axis.Y * s, axis.Z * s}
 }
 
+func NewVecDiffQuat(pointer, nominal Vec3) Quat {
+	dot := pointer.Dot(nominal)
+	len := float32(math.Sqrt(float64(pointer.LenSq() * nominal.LenSq())))
+	if len < 0.000001 {
+		return ZeroQuat()
+	}
+
+	if dot/len == -1 {
+		diff := pointer.Ortho().Norm()
+		return Quat{0.0, diff.X, diff.Y, diff.Z}
+	}
+
+	diff := pointer.Cross(nominal)
+	a := len + dot
+	return Quat{a, diff.X, diff.Y, diff.Z}
+}
+
 func ZeroQuat() Quat {
 	return Quat{1.0, 0.0, 0.0, 0.0}
 }
-func (q Quat) conj() Quat {
+func (q Quat) Conj() Quat {
 	return Quat{q.a, -q.b, -q.c, -q.d}
 }
 func (q Quat) Norm() Quat {
@@ -75,7 +92,7 @@ func (q Quat) ZeroSlerp(w float32) Quat {
 }
 func (q Quat) Rotate(v Vec3) Vec3 {
 	p := Quat{0.0, v.X, v.Y, v.Z}
-	o := q.Product(p).Product(q.conj())
+	o := q.Product(p).Product(q.Conj())
 	return Vec3{o.b, o.c, o.d}
 }
 func (q Quat) Apply() {

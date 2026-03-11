@@ -28,24 +28,35 @@ type EngineSpec struct {
 	CanShutdown bool     `json:"can_shutdown"`
 }
 
+type ChuteSpec struct {
+	DeployTime float32 `json:"deploy_time"`
+	Mass       float32 `json:"mass"`
+	Height     float32 `json:"height"`
+	Area       float32 `json:"area"`
+	Drag       float32 `json:"drag"`
+}
+
 // Aero table - AOA, 0 deg, 10 deg,...,180 deg
-// lift + drag vals
+// lift [ ] + drag [X] vals
 // Ctrl src - player input, stage -> to deployed
 // State - 0.0 to 1.0
 // ChangeSpeed of State
 
-type AeroSpec struct {
+type AeroDef struct {
+	Area float32 `json:"area"`
 }
 
 type PartDef struct {
 	Name     string      `json:"name"`
 	TypeName string      `json:"type"`
 	Mass     float32     `json:"mass"`
+	Aero     *AeroDef    `json:"aero"`
 	Body     *BodyDef    `json:"body"`
 	Attach   *AttachPt   `json:"attach"`
 	Ctrl     *CtrlSpec   `json:"ctrl"`
 	Decoup   *DecoupSpec `json:"decoup"`
 	Engine   *EngineSpec `json:"engine"`
+	Chute    *ChuteSpec  `json:"chute"`
 }
 
 func (d *PartDef) create() Part {
@@ -54,10 +65,12 @@ func (d *PartDef) create() Part {
 		return d.createHull()
 	case "ctrl":
 		return d.createCtrl()
-	case "engine":
-		return d.createEngine()
 	case "decoup":
 		return d.createDecoup()
+	case "engine":
+		return d.createEngine()
+	case "chute":
+		return d.createChute()
 	}
 
 	log.Fatalf("create: unknown type %v", d.TypeName)
@@ -79,6 +92,15 @@ func (d *PartDef) createCtrl() *PartCtrl {
 	p.IsDead = false
 	return p
 }
+func (d *PartDef) createDecoup() *PartDecoup {
+	p := new(PartDecoup)
+	p.Def = d
+	p.Geom = d.buildGeom()
+	p.IsActive = false
+	p.IsDead = false
+	p.IsUsed = false
+	return p
+}
 func (d *PartDef) createEngine() *PartEngine {
 	p := new(PartEngine)
 	p.Def = d
@@ -90,13 +112,14 @@ func (d *PartDef) createEngine() *PartEngine {
 	p.Plume = *p.Def.Engine.PlumeDef.create()
 	return p
 }
-func (d *PartDef) createDecoup() *PartDecoup {
-	p := new(PartDecoup)
+func (d *PartDef) createChute() *PartChute {
+	p := new(PartChute)
 	p.Def = d
 	p.Geom = d.buildGeom()
 	p.IsActive = false
 	p.IsDead = false
 	p.IsUsed = false
+	p.ChuteGeom = geom1DefMap["base/geom/chute0"].create()
 	return p
 }
 func (d *PartDef) buildGeom() []Geom1 {

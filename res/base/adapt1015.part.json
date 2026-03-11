@@ -3,6 +3,13 @@
     "info": "",
     "type": "hull",
     "mass": 1500.0,
+    "aero": {
+        "area": 6.0,
+        "drag": {
+            "aoas": [0.0, 90.0, 180.0],
+            "vals": [0.4, 0.6, 1.2]
+        }
+    },
     "body": {
         "tapers": [{
             "texture": "base/part/adapta",

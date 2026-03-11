@@ -1,0 +1,33 @@
+{
+    "name": "chute05",
+    "info": "",
+    "type": "chute",
+    "mass": 300.0,
+    "aero": {
+        "area": 0.5,
+        "drag": {
+            "aoas": [0.0, 90.0, 180.0],
+            "vals": [0.4, 0.6, 1.2]
+        }
+    },
+    "body": {
+        "tapers": [{
+            "texture": "base/part/chutea",
+            "rings": 16,
+            "upper": { "offset": 0.5, "radius": 0.25 },
+            "lower": { "offset": -0.5, "radius": 0.5 }
+        }],
+        "planes": []
+    },
+    "attach": {
+        "upper": [0.0, 0.0, 0.5],
+        "lower": [0.0, 0.0, -0.5]
+    },
+    "chute": {
+        "deploy_time": 6.0,
+	    "mass": 100.0,
+	    "height": 4.0,
+	    "area": 192.0,
+	    "drag": 2.3
+    }
+}

@@ -3,6 +3,13 @@
     "info": "",
     "type": "engine",
     "mass": 3000.0,
+    "aero": {
+        "area": 7.0,
+        "drag": {
+            "aoas": [0.0, 90.0, 180.0],
+            "vals": [0.6, 1.2, 0.8]
+        }
+    },
     "body": {
         "tapers": [{
             "texture": "base/part/solida",
@@ -28,7 +35,7 @@
             "flow": 4000.0
         },
         "plume": {
-            "texture": "base/part/plume1",
+            "texture": "base/part/plume2",
             "offset": [0.0, 0.0, -3.0],
             "size": 2.0
         },
