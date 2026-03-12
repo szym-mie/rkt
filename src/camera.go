@@ -40,18 +40,17 @@ func (c *Camera) SetProjection() {
 	gl.LoadIdentity()
 	f := float64(c.width)/float64(c.height) - 1.0
 	gl.Frustum(-1.0-f, 1.0+f, -1.0, 1.0, c.depthNear, c.depthFar)
-	gl.Rotatef(90.0, 0.0, 0.0, 1.0) // y <-> z
-	gl.Rotatef(90.0, 0.0, 1.0, 0.0) // y <-> z
 	gl.PushMatrix()
 }
 func (c *Camera) CaptureMouse(window *glfw.Window) {
 	window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
 }
 func (c *Camera) Apply() {
-	gl.MatrixMode(gl.PROJECTION)
-	gl.PopMatrix()
-	gl.PushMatrix()
-	gl.Translatef(c.Radius, 0.0, 0.0)
+	gl.MatrixMode(gl.MODELVIEW)
+	gl.LoadIdentity()
+	gl.Translatef(0.0, 0.0, -c.Radius)
+	gl.Rotatef(90.0, 0.0, 0.0, 1.0) // y <-> z
+	gl.Rotatef(90.0, 0.0, 1.0, 0.0) // y <-> z
 	gl.Rotatef(-c.pitch, 0.0, 1.0, 0.0)
 	gl.Rotatef(c.yaw, 0.0, 0.0, 1.0)
 	c.FocusPos.Apply()

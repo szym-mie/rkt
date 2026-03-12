@@ -106,6 +106,16 @@ func main() {
 	gl.DepthFunc(gl.LESS)
 	gl.ClearDepth(1.0)
 
+	fog := [4]float32{0.2, 0.7, 0.8, 0.0}
+	gl.Enable(gl.FOG)
+	gl.Fogi(gl.FOG_MODE, gl.LINEAR)
+	gl.Fogi(gl.FOG_COORD_SRC, gl.FRAGMENT_DEPTH)
+	gl.Fogfv(gl.FOG_COLOR, &fog[0])
+	gl.Fogf(gl.FOG_DENSITY, 0.05)
+	gl.Hint(gl.FOG_HINT, gl.NICEST)
+	gl.Fogf(gl.FOG_START, 1.0)
+	gl.Fogf(gl.FOG_END, 5000.0)
+
 	gl.Enable(gl.BLEND)
 	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
@@ -182,11 +192,6 @@ func main() {
 		camera.SetProjection()
 		camera.Update(mousePos)
 		camera.Apply()
-
-		gl.MatrixMode(gl.MODELVIEW)
-		gl.LoadIdentity()
-
-		//log.Printf("pz %v vz %v", v.Pos.Z, v.Vel.Z)
 
 		dt := time.Millisecond * 50
 

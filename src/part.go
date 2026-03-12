@@ -163,16 +163,18 @@ type PartChute struct {
 	ChuteRot     Quat
 	DeployTime   float32
 	Height       float32
+	Radius       float32
 }
 
 func (p *PartChute) draw(offset *Vec3) {
 	gl.MatrixMode(gl.MODELVIEW)
 	gl.PushMatrix()
 	p.drawModel(offset)
+	r := p.Radius
 	h := p.Height
 	p.ChuteAntiRot.Apply()
 	p.ChuteRot.Conj().Apply()
-	gl.Scalef(h, h, h)
+	gl.Scalef(r, r, h)
 	if p.IsActive && !p.IsCut {
 		p.ChuteGeom.draw()
 	}
@@ -201,12 +203,26 @@ func (p *PartChute) update(v *Vehicle, n *PartNode, dt float32) {
 	if deployFrac > 1.0 {
 		deployFrac = 1.0
 	}
+	deployFracSq := deployFrac * deployFrac
 
 	p.Height = deployFrac * c.Height
-	dragMag := deployFrac * deployFrac * c.Area * c.Drag * v.Vel.LenSq() * 0.5
-	dragAcc := -dragMag / v.Mass * dt
+	p.Radius = deployFracSq * c.Height
+	dragMag := deployFracSq * c.Area * c.Drag * v.Vel.LenSq() * 0.5
+	// linear impulse
+	dragForce := v.Vel.Norm().Scale(-dragMag * dt)
+
+	// EXPERIMENTAL: impose rotation (simpified cylinder)
+	// estimate inertia manually: m(3r^2 * h^2)/12
+	inertia := v.Mass * (3 + 9) / 12
+	// radius from centre of mass (only works if part above root)
+	radius := v.Rot.Rotate(Vec3{0, 0, -1})
+	// angular impulse
+	dragTorque := dragForce.Cross(radius)
+	log.Println(dragTorque)
+	// linear accel
 	if v.Vel.Len() > 1.0 {
-		v.Vel = v.Vel.Scale(1.0 + dragAcc/v.Vel.Len())
+		v.Ang = v.Ang.Add(dragTorque.Scale(1 / inertia))
+		v.Vel = v.Vel.Add(dragForce.Scale(1 / v.Mass))
 	}
 }
 func (p *PartChute) getMass() float32 {

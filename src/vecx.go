@@ -78,12 +78,12 @@ func (v Vec3) Scale(k float32) Vec3 {
 	return Vec3{v.X * k, v.Y * k, v.Z * k}
 }
 func (v Vec3) Norm() Vec3 {
-	lenSqr := v.X*v.X + v.Y*v.Y + v.Z*v.Z
+	lenSqr := float64(v.X*v.X + v.Y*v.Y + v.Z*v.Z)
 	if lenSqr < 0.00001 {
 		return Vec3{}
 	}
 
-	return v.Scale(1 / lenSqr)
+	return v.Scale(1 / float32(math.Sqrt(lenSqr)))
 }
 func (v Vec3) Product(u Vec3) Vec3 {
 	return Vec3{v.X * u.X, v.Y * u.Y, v.Z * u.Z}
@@ -117,6 +117,14 @@ func (v Vec3) Ortho() Vec3 {
 	}
 
 	return v.Cross(other)
+}
+
+func Max(x float32, y float32) float32 {
+	if x < y {
+		return y
+	}
+
+	return x
 }
 
 func Clamp(x float32, min, max float32) float32 {

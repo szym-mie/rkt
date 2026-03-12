@@ -87,6 +87,7 @@ func (v *Adi) draw(input Quat) {
 	gl.PopMatrix()
 
 	gl.PushMatrix()
+	gl.LoadIdentity()
 	v.pos.Add(Vec3{Z: 1.0}).Apply()
 	gl.Scalef(v.scale, v.scale, v.scale)
 	v.frameGeom.draw()
