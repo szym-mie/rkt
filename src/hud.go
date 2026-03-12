@@ -44,8 +44,10 @@ func (h *Hud) SetProjection() {
 	gl.PushMatrix()
 }
 func (h *Hud) Draw(input Quat) {
+	gl.Disable(gl.DEPTH_TEST)
 	h.SetProjection()
 	h.adi.draw(input)
+	gl.Enable(gl.DEPTH_TEST)
 }
 
 func buildAdi() *Adi {
