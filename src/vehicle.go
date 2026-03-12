@@ -90,6 +90,7 @@ func (v *Vehicle) Update(dt float32) {
 	w := Quat{0.0, v.Ang.X, v.Ang.Y, v.Ang.Z}.Scale(dt / 2)
 	w.a += 1.0
 	v.Rot = w.Product(v.Rot).Norm()
+	v.Ang = v.Ang.Scale(0.99)
 	// log.Println(v.Rot)
 	// log.Printf("p/r/y %f/%f/%f\n", v.Rot.Pitch(), v.Rot.Roll(), v.Rot.Heading())
 }

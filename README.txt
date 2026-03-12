@@ -1,10 +1,12 @@
 rkt
 ===
 
-1. Controls
------------
+1. Quickstart
+-------------
 
-Move the mouse to rotate the camera around the craft
+Use 'go run .' from the project root.
+
+Move the mouse to rotate the camera around the craft.
 
 |  W, S   | pitch down/up
 |  A, D   | yaw left/right
@@ -13,10 +15,10 @@ Move the mouse to rotate the camera around the craft
 |  -, =   | zoom camera out/in
 |  Esc    | quit
 
-2. Running
-----------
+2. Building
+-----------
 
-Use 'go run .' from the project root. One of the unforeseen problems with the Go + OpenGL is that Windows does not trust the binaries built with 'go build -o rkt.ext main.go', completely blocking the execution of the game. Signing might help, but my first attempt at this didn't work at all.
+Standard Go rules persist - please note that this project uses CGO and therefore make sure you have the right version of the GCC compiler installed on your machine (please refer to https://go.dev/doc/install/gccgo). On Windows Winlibs Mingw64 toolchain is confirmed to work properly.
 
 3. Resources
 ------------
