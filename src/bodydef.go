@@ -5,9 +5,12 @@ import (
 )
 
 type BodyDef struct {
-	Tapers []TaperDef `json:"tapers"`
-	Planes []PlaneDef `json:"planes"`
+	InertiaCoeff Vec3       `json:"inertia"`
+	Tapers       []TaperDef `json:"tapers"`
+	Planes       []PlaneDef `json:"planes"`
 }
+
+// TODO: merge bodyDef with colliders and calcluate axis inertia from defs
 
 type TaperEndDef struct {
 	Offset float32 `json:"offset"`

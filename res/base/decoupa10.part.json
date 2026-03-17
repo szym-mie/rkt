@@ -4,13 +4,12 @@
     "type": "decoup",
     "mass": 400.0,
     "aero": {
-        "area": 3.1,
-        "drag": {
-            "aoas": [0.0, 90.0, 180.0],
-            "vals": [0.8, 0.4, 0.8]
-        }
-    },    
+        "body": "taper",
+        "area": [3.0, 3.0, 2.0, 2.0, 2.0, 2.0],
+        "drag": [1.1, 1.1, 1.2, 1.2, 1.2, 1.2]
+    },
     "body": {
+        "inertia": [0.33, 0.33, 0.50],
         "tapers": [{
             "texture": "base/part/decoupa",
             "rings": 16,

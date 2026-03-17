@@ -65,17 +65,21 @@ func (v Vec3) Len() float32 {
 	lenSq := v.X*v.X + v.Y*v.Y + v.Z*v.Z
 	return float32(math.Sqrt(float64(lenSq)))
 }
+func (v Vec3) AxisLenSq() Vec3 {
+	x, y, z := v.X*v.X, v.Y*v.Y, v.Z*v.Z
+	return Vec3{y + z, x + z, x + y}
+}
 func (v Vec3) Apply() {
 	gl.Translatef(v.X, v.Y, v.Z)
 }
 func (v Vec3) Add(u Vec3) Vec3 {
 	return Vec3{v.X + u.X, v.Y + u.Y, v.Z + u.Z}
 }
+func (v Vec3) AddSca(k float32) Vec3 {
+	return Vec3{v.X + k, v.Y + k, v.Z + k}
+}
 func (v Vec3) Sub(u Vec3) Vec3 {
 	return Vec3{v.X - u.X, v.Y - u.Y, v.Z - u.Z}
-}
-func (v Vec3) Scale(k float32) Vec3 {
-	return Vec3{v.X * k, v.Y * k, v.Z * k}
 }
 func (v Vec3) Norm() Vec3 {
 	lenSqr := float64(v.X*v.X + v.Y*v.Y + v.Z*v.Z)
@@ -83,10 +87,29 @@ func (v Vec3) Norm() Vec3 {
 		return Vec3{}
 	}
 
-	return v.Scale(1 / float32(math.Sqrt(lenSqr)))
+	return v.MulSca(1 / float32(math.Sqrt(lenSqr)))
 }
-func (v Vec3) Product(u Vec3) Vec3 {
+func (v Vec3) Mul(u Vec3) Vec3 {
 	return Vec3{v.X * u.X, v.Y * u.Y, v.Z * u.Z}
+}
+func (v Vec3) MulSca(k float32) Vec3 {
+	return Vec3{v.X * k, v.Y * k, v.Z * k}
+}
+func (v Vec3) Div(u Vec3) Vec3 {
+	x, y, z := float32(0.0), float32(0.0), float32(0.0)
+	if u.X != 0.0 {
+		x = v.X / u.X
+	}
+	if u.Y != 0.0 {
+		y = v.Y / u.Y
+	}
+	if u.Z != 0.0 {
+		z = v.Z / u.Z
+	}
+	return Vec3{x, y, z}
+}
+func (v Vec3) Lerp(u Vec3, w float32) Vec3 {
+	return v.MulSca(1.0 - w).Add(u.MulSca(w))
 }
 func (v Vec3) Dot(u Vec3) float32 {
 	return v.X*u.X + v.Y*u.Y + v.Z*u.Z

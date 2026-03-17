@@ -8,6 +8,7 @@ type Vehicle struct {
 	Name          string
 	Parts         *PartNode
 	Mass          float32
+	Inertia       Vec3
 	Height        float32
 	Pos, Vel, Ang Vec3
 	Rot           Quat
@@ -21,6 +22,8 @@ func NewVehicle(name string, root Part) *Vehicle {
 	v.Stages = &StageNode{nil, nil}
 	v.Rot = ZeroQuat()
 	v.UpdateHeight()
+	v.UpdateCoM()
+	v.UpdateInertia()
 	return v
 }
 
@@ -39,6 +42,8 @@ func (v *Vehicle) Fork(nodes *PartNode) *Vehicle {
 	w.Rot = v.Rot
 	w.Ang = v.Ang
 	v.UpdateHeight()
+	v.UpdateCoM()
+	v.UpdateInertia()
 	return w
 }
 func (v *Vehicle) Draw() {
@@ -56,16 +61,9 @@ func (v *Vehicle) Draw() {
 }
 func (v *Vehicle) Update(dt float32) {
 	v.UpdateHeight()
+	v.UpdateCoM()
+	v.UpdateInertia()
 
-	mass := float32(0.0)
-	for node := v.Parts; node != nil; node = node.Lower {
-		mass += node.Part.getMass()
-	}
-	for node := v.Parts.Upper; node != nil; node = node.Upper {
-		mass += node.Part.getMass()
-	}
-
-	v.Mass = mass
 	for node := v.Parts; node != nil; node = node.Lower {
 		node.Part.update(v, node, dt)
 	}
@@ -74,7 +72,7 @@ func (v *Vehicle) Update(dt float32) {
 	}
 
 	v.Vel.Z -= 9.0 * dt
-	v.Pos = v.Pos.Add(v.Vel.Scale(dt))
+	v.Pos = v.Pos.Add(v.Vel.MulSca(dt))
 	if v.Pos.Z < v.Height {
 		v.Pos.Z = v.Height
 		v.Rot = ZeroQuat()
@@ -90,9 +88,7 @@ func (v *Vehicle) Update(dt float32) {
 	w := Quat{0.0, v.Ang.X, v.Ang.Y, v.Ang.Z}.Scale(dt / 2)
 	w.a += 1.0
 	v.Rot = w.Product(v.Rot).Norm()
-	v.Ang = v.Ang.Scale(0.99)
-	// log.Println(v.Rot)
-	// log.Printf("p/r/y %f/%f/%f\n", v.Rot.Pitch(), v.Rot.Roll(), v.Rot.Heading())
+	v.Ang = v.Ang.MulSca(0.99)
 }
 func (v *Vehicle) AddToStage(part Part) {
 	s := new(StageNode)
@@ -128,6 +124,43 @@ func (v *Vehicle) UpdateHeight() {
 	}
 	_, lAttachPt := last.Part.getAttachPts()
 	v.Height = -last.Offset.Z - lAttachPt.Z
+}
+func (v *Vehicle) UpdateCoM() {
+	com := Vec3{}
+	totalMass := v.Parts.Part.getMass()
+	for node := v.Parts.Lower; node != nil; node = node.Lower {
+		nodeMass := node.Part.getMass()
+		totalMass += nodeMass
+		com = com.Lerp(node.Offset, nodeMass/totalMass)
+	}
+	for node := v.Parts.Upper; node != nil; node = node.Upper {
+		nodeMass := node.Part.getMass()
+		totalMass += nodeMass
+		com = com.Lerp(node.Offset, nodeMass/totalMass)
+	}
+
+	v.Mass = totalMass
+	// log.Println(v.Name, com)
+}
+func (v *Vehicle) UpdateInertia() {
+	totalInertia := Vec3{}
+	for node := v.Parts.Lower; node != nil; node = node.Lower {
+		radiusSq := node.Offset.AxisLenSq()
+		mass := node.Part.getMass()
+		offset := radiusSq.MulSca(mass)
+		inertia := node.Part.getInertiaCoeff().MulSca(mass).Add(offset)
+		totalInertia = totalInertia.Add(inertia)
+	}
+	for node := v.Parts; node != nil; node = node.Upper {
+		radiusSq := node.Offset.AxisLenSq()
+		mass := node.Part.getMass()
+		offset := radiusSq.MulSca(mass)
+		inertia := node.Part.getInertiaCoeff().MulSca(mass).Add(offset)
+		totalInertia = totalInertia.Add(inertia)
+	}
+
+	v.Inertia = totalInertia
+	// log.Println(v.Name, totalInertia)
 }
 
 // BEGIN STUPID

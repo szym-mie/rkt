@@ -4,13 +4,12 @@
     "type": "hull",
     "mass": 1500.0,
     "aero": {
-        "area": 6.0,
-        "drag": {
-            "aoas": [0.0, 90.0, 180.0],
-            "vals": [0.4, 0.6, 1.2]
-        }
+        "body": "taper",
+        "area": [3.0, 6.5, 5.0, 5.0, 5.0, 5.0],
+        "drag": [0.7, 1.5, 1.2, 1.2, 1.2, 1.2]
     },
     "body": {
+        "inertia": [0.72, 0.72, 0.78],
         "tapers": [{
             "texture": "base/part/adapta",
             "rings": 16,

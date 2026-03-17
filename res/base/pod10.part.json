@@ -4,13 +4,12 @@
     "type": "ctrl",
     "mass": 3000.0,
     "aero": {
-        "area": 3.1,
-        "drag": {
-            "aoas": [0.0, 90.0, 180.0],
-            "vals": [0.4, 0.6, 1.2]
-        }
+        "body": "taper",
+        "area": [0.8, 3.0, 3.0, 3.0, 3.0, 3.0],
+        "drag": [0.7, 1.5, 1.2, 1.2, 1.2, 1.2]
     },
     "body": {
+        "inertia": [0.47, 0.47, 0.28],
         "tapers": [{
             "texture": "base/part/pod10",
             "rings": 16,

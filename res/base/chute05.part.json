@@ -4,13 +4,12 @@
     "type": "chute",
     "mass": 300.0,
     "aero": {
-        "area": 0.5,
-        "drag": {
-            "aoas": [0.0, 90.0, 180.0],
-            "vals": [0.4, 0.6, 1.2]
-        }
+        "body": "taper",
+        "area": [0.2, 0.8, 0.7, 0.7, 0.7, 0.7],
+        "drag": [0.7, 1.5, 1.2, 1.2, 1.2, 1.2]
     },
     "body": {
+        "inertia": [0.12, 0.12, 0.08],
         "tapers": [{
             "texture": "base/part/chutea",
             "rings": 16,

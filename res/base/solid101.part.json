@@ -4,12 +4,12 @@
     "type": "engine",
     "mass": 800.0,
     "aero": {
-        "drag": {
-            "aoas": [0.0, 90.0, 180.0],
-            "vals": [0.6, 1.2, 0.8]
-        }
+        "body": "taper",
+        "area": [3.0, 3.0, 4.5, 4.5, 4.5, 4.5],
+        "drag": [1.1, 1.5, 1.2, 1.2, 1.2, 1.2]
     },
     "body": {
+        "inertia": [0.60, 0.60, 0.50],
         "tapers": [{
             "texture": "base/part/solida",
             "rings": 16,

@@ -11,6 +11,7 @@ type Part interface {
 	draw(offset *Vec3)
 	update(v *Vehicle, n *PartNode, dt float32)
 	getMass() float32
+	getInertiaCoeff() Vec3
 	getDrag(aoa float32) float32
 	getAttachPts() (Vec3, Vec3)
 	GetName() string
@@ -54,8 +55,11 @@ func (p *PartBase) Activate() {
 func (p *PartBase) getMass() float32 {
 	return p.Def.Mass
 }
+func (p *PartBase) getInertiaCoeff() Vec3 {
+	return p.Def.Body.InertiaCoeff
+}
 func (p *PartBase) getDrag(aoa float32) float32 {
-	return p.Def.Aero.Area * 0.5
+	return 1.0 * 0.5
 }
 
 type PartHull struct {
@@ -139,7 +143,7 @@ func (p *PartEngine) update(v *Vehicle, n *PartNode, dt float32) {
 	if p.FuelMass > 0.0 {
 		force := e.FuelDef.Impulse * p.FuelFlow * dt
 		forceVec := Vec3{0.0, 0.0, force}
-		v.Vel = v.Vel.Add(v.Rot.Rotate(forceVec).Scale(1 / v.Mass))
+		v.Vel = v.Vel.Add(v.Rot.Rotate(forceVec).MulSca(1 / v.Mass))
 		fuelCons := p.FuelFlow * dt
 		p.FuelMass -= min(fuelCons, p.FuelMass)
 		p.Plume.update(dt)
@@ -207,29 +211,32 @@ func (p *PartChute) update(v *Vehicle, n *PartNode, dt float32) {
 
 	p.Height = deployFrac * c.Height
 	p.Radius = deployFracSq * c.Height
-	dragMag := deployFracSq * c.Area * c.Drag * v.Vel.LenSq() * 0.5
+	dragMag := (0.5 + deployFracSq*c.Area*c.Drag) * v.Vel.LenSq() * 0.5
 	// linear impulse
-	dragForce := v.Vel.Norm().Scale(-dragMag * dt)
+	dragForce := v.Vel.Norm().MulSca(-dragMag * dt)
 
 	// EXPERIMENTAL: impose rotation (simpified cylinder)
-	// estimate inertia manually: m(3r^2 * h^2)/12
-	inertia := v.Mass * (3 + 9) / 12
 	// radius from centre of mass (only works if part above root)
-	radius := v.Rot.Rotate(Vec3{0, 0, -1})
+	radius := Vec3{0, 0, 1}
 	// angular impulse
-	dragTorque := dragForce.Cross(radius)
-	log.Println(dragTorque)
-	// linear accel
+	dragTorque := radius.Cross(v.Rot.Conj().Rotate(dragForce))
 	if v.Vel.Len() > 1.0 {
-		v.Ang = v.Ang.Add(dragTorque.Scale(1 / inertia))
-		v.Vel = v.Vel.Add(dragForce.Scale(1 / v.Mass))
+		// log.Println(v.Vel.Len())
+		log.Println( /*v.Ang,*/ v.Rot.Conj().Rotate(dragForce), v.Inertia) //, dragTorque, v.Inertia)
+		v.Ang = v.Ang.Add(v.Rot.Rotate(dragTorque).Div(v.Inertia))
+		v.Vel = v.Vel.Add(dragForce.MulSca(1 / v.Mass))
 	}
 }
 func (p *PartChute) getMass() float32 {
 	return p.Def.Mass + p.Def.Chute.Mass
 }
 func (p *PartChute) getDrag(aoa float32) float32 {
-	return p.PartBase.getDrag(aoa) + p.ExtraDrag
+	drag := p.PartBase.getDrag(aoa)
+	if p.IsActive {
+		drag += p.ExtraDrag
+	}
+
+	return drag
 }
 
 type PartWing struct {

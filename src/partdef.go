@@ -43,7 +43,9 @@ type ChuteSpec struct {
 // ChangeSpeed of State
 
 type AeroDef struct {
-	Area float32 `json:"area"`
+	Body string `json:"body"`
+	// Area []float32 `json:"area"`
+	// Drag []float32 `json:"drag"`
 }
 
 type PartDef struct {

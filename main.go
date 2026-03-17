@@ -193,7 +193,7 @@ func main() {
 		camera.Update(mousePos)
 		camera.Apply()
 
-		dt := time.Millisecond * 50
+		dt := time.Millisecond * 16
 
 		patch00.Draw()
 		patchInf.Draw()
