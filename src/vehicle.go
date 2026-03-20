@@ -1,6 +1,8 @@
 package rkt
 
 import (
+	"log"
+
 	"github.com/go-gl/gl/v2.1/gl"
 )
 
@@ -85,7 +87,7 @@ func (v *Vehicle) Update(dt float32) {
 			v.Vel.Z = 0.0
 		}
 	}
-	w := Quat{0.0, v.Ang.X, v.Ang.Y, v.Ang.Z}.Scale(dt / 2)
+	w := Quat{0.0, v.Ang.X, v.Ang.Y, v.Ang.Z}.Scale(dt * 0.5)
 	w.a += 1.0
 	v.Rot = w.Product(v.Rot).Norm()
 	v.Ang = v.Ang.MulSca(0.99)
@@ -140,6 +142,12 @@ func (v *Vehicle) UpdateCoM() {
 	}
 
 	v.Mass = totalMass
+	// for node := v.Parts.Lower; node != nil; node = node.Lower {
+	// 	com = com.Lerp(node.Offset, nodeMass/totalMass)
+	// }
+	// for node := v.Parts.Upper; node != nil; node = node.Upper {
+	// 	com = com.Lerp(node.Offset, nodeMass/totalMass)
+	// }
 	// log.Println(v.Name, com)
 }
 func (v *Vehicle) UpdateInertia() {
@@ -160,17 +168,26 @@ func (v *Vehicle) UpdateInertia() {
 	}
 
 	v.Inertia = totalInertia
-	// log.Println(v.Name, totalInertia)
+	log.Println(v.Name, totalInertia)
+}
+func (v *Vehicle) ApplyImpulse(imp, pt Vec3) {
+	// angular impulse
+	torque := pt.Cross(v.Rot.Conj().Rotate(imp))
+	// TODO: only remaining energy should go into linear motion not full
+	v.Ang = v.Ang.Add(v.Rot.Rotate(torque).Div(v.Inertia))
+	v.Vel = v.Vel.Add(imp.MulSca(1.0 / v.Mass))
+	// TODO: draw force vector because why not
+	DrawForce(imp.MulSca(0.01), v.Pos.Add(v.Rot.Rotate(pt)))
 }
 
 // BEGIN STUPID
 var Vehicles []*Vehicle = make([]*Vehicle, 128)
-var vehiclesIndex uint = 0
+var VehiclesIndex uint = 0
 
 func (v *Vehicle) Link() {
-	if vehiclesIndex < 128 {
-		Vehicles[vehiclesIndex] = v
-		vehiclesIndex++
+	if VehiclesIndex < 128 {
+		Vehicles[VehiclesIndex] = v
+		VehiclesIndex++
 	}
 }
 

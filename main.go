@@ -25,6 +25,8 @@ const (
 	PlayMode
 )
 
+var pause bool
+var focusIndex uint
 var mainVehicle *rkt.Vehicle
 var radius float32
 
@@ -49,6 +51,8 @@ func onKey(w *glfw.Window, key glfw.Key, sc int, act glfw.Action, mods glfw.Modi
 		switch key {
 		case glfw.KeyEscape:
 			w.SetShouldClose(true)
+		case glfw.KeyP:
+			pause = !pause
 		case glfw.KeySpace:
 			mainVehicle.ApplyStage()
 		case glfw.KeyBackspace:
@@ -66,9 +70,11 @@ func onKey(w *glfw.Window, key glfw.Key, sc int, act glfw.Action, mods glfw.Modi
 		case glfw.KeyS:
 			mainVehicle.Ang = mainVehicle.Ang.Add(mainVehicle.Rot.Rotate(ctrlVector(rkt.YAxis, +ctrlSpeed)))
 		case glfw.KeyQ:
-			mainVehicle.Ang = mainVehicle.Ang.Add(mainVehicle.Rot.Rotate(ctrlVector(rkt.ZAxis, -ctrlSpeed)))
+			mainVehicle.Ang = mainVehicle.Ang.Add(mainVehicle.Rot.Rotate(ctrlVector(rkt.ZAxis, -ctrlSpeed*10)))
 		case glfw.KeyE:
-			mainVehicle.Ang = mainVehicle.Ang.Add(mainVehicle.Rot.Rotate(ctrlVector(rkt.ZAxis, +ctrlSpeed)))
+			mainVehicle.Ang = mainVehicle.Ang.Add(mainVehicle.Rot.Rotate(ctrlVector(rkt.ZAxis, +ctrlSpeed*10)))
+		case glfw.KeyF2:
+			focusIndex = (focusIndex + 1) % rkt.VehiclesIndex
 		}
 	}
 }
@@ -137,16 +143,20 @@ func main() {
 	mainVehicle = rkt.NewVehicle("test", rkt.NewPart("base/pod10"))
 	p := mainVehicle.Parts
 	mainVehicle.AttachAbove(p, rkt.NewPart("base/chute05"))
-	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/decoupa"))
+	mainVehicle.AddStage()
+	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/decoup10"))
 	mainVehicle.AddStage()
 	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/solid101"))
-	// p = mainVehicle.AttachBelow(p, rkt.NewPart("base/decoupa"))
+	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/decoup10"))
+	mainVehicle.AddStage()
+	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/solid101"))
+	// p = mainVehicle.AttachBelow(p, rkt.NewPart("base/decoup10"))
 	// mainVehicle.AddStage()
 	// p = mainVehicle.AttachBelow(p, rkt.NewPart("base/solid102"))
-	// p = mainVehicle.AttachBelow(p, rkt.NewPart("base/decoupa"))
-	// mainVehicle.AddStage()
-	// p = mainVehicle.AttachBelow(p, rkt.NewPart("base/adapt1015"))
-	// p = mainVehicle.AttachBelow(p, rkt.NewPart("base/solid153"))
+	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/decoup10"))
+	mainVehicle.AddStage()
+	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/adapt1015"))
+	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/solid153"))
 	mainVehicle.Link()
 
 	camera.Target = mainVehicle
@@ -182,10 +192,13 @@ func main() {
 		n = n.Next
 	}
 
+	rkt.InitDraw()
+	rkt.SetLineColor(1.0, 0.0, 0.0)
 	for !window.ShouldClose() {
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 		camera.Radius = radius
+		camera.Target = rkt.Vehicles[focusIndex]
 
 		x, y := window.GetCursorPos()
 		mousePos := rkt.Vec2{X: float32(x), Y: float32(y)}
@@ -193,7 +206,7 @@ func main() {
 		camera.Update(mousePos)
 		camera.Apply()
 
-		dt := time.Millisecond * 16
+		dt := time.Millisecond * 25
 
 		patch00.Draw()
 		patchInf.Draw()
@@ -202,7 +215,9 @@ func main() {
 				break
 			}
 			v.Draw()
-			v.Update(float32(dt.Seconds()))
+			if !pause {
+				v.Update(float32(dt.Seconds()))
+			}
 		}
 
 		// last because transparency

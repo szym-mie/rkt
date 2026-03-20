@@ -43,18 +43,18 @@ type ChuteSpec struct {
 // ChangeSpeed of State
 
 type AeroDef struct {
-	Body string `json:"body"`
-	// Area []float32 `json:"area"`
-	// Drag []float32 `json:"drag"`
+	Body string    `json:"body"`
+	Area []float32 `json:"area"`
+	Drag []float32 `json:"drag"`
 }
 
 type PartDef struct {
 	Name     string      `json:"name"`
 	TypeName string      `json:"type"`
 	Mass     float32     `json:"mass"`
-	Aero     *AeroDef    `json:"aero"`
-	Body     *BodyDef    `json:"body"`
-	Attach   *AttachPt   `json:"attach"`
+	Aero     AeroDef     `json:"aero"`
+	Body     BodyDef     `json:"body"`
+	Attach   AttachPt    `json:"attach"`
 	Ctrl     *CtrlSpec   `json:"ctrl"`
 	Decoup   *DecoupSpec `json:"decoup"`
 	Engine   *EngineSpec `json:"engine"`

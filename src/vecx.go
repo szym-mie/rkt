@@ -142,7 +142,15 @@ func (v Vec3) Ortho() Vec3 {
 	return v.Cross(other)
 }
 
-func Max(x float32, y float32) float32 {
+func Min(x, y float32) float32 {
+	if x > y {
+		return y
+	}
+
+	return x
+}
+
+func Max(x, y float32) float32 {
 	if x < y {
 		return y
 	}

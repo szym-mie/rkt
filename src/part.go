@@ -12,7 +12,7 @@ type Part interface {
 	update(v *Vehicle, n *PartNode, dt float32)
 	getMass() float32
 	getInertiaCoeff() Vec3
-	getDrag(aoa float32) float32
+	getDragPremul(aoa float32) float32
 	getAttachPts() (Vec3, Vec3)
 	GetName() string
 	Activate()
@@ -52,14 +52,24 @@ func (p *PartBase) drawAttachPts() {
 func (p *PartBase) Activate() {
 	p.IsActive = true
 }
+
+func applyDrag(v *Vehicle, n *PartNode, dt float32) {
+	velMagSq := v.Vel.LenSq()
+	dragMag := n.Part.getDragPremul(0.0) * velMagSq * -0.5
+	dragForce := v.Vel.Norm().MulSca(dragMag * dt)
+	if velMagSq > 0.1 {
+		v.ApplyImpulse(dragForce, n.Offset)
+	}
+}
+
 func (p *PartBase) getMass() float32 {
 	return p.Def.Mass
 }
 func (p *PartBase) getInertiaCoeff() Vec3 {
 	return p.Def.Body.InertiaCoeff
 }
-func (p *PartBase) getDrag(aoa float32) float32 {
-	return 1.0 * 0.5
+func (p *PartBase) getDragPremul(aoa float32) float32 {
+	return p.Def.Aero.Area[0] * p.Def.Aero.Drag[0]
 }
 
 type PartHull struct {
@@ -73,7 +83,7 @@ func (p *PartHull) draw(offset *Vec3) {
 	gl.PopMatrix()
 }
 func (p *PartHull) update(v *Vehicle, n *PartNode, dt float32) {
-	// do nothing
+	applyDrag(v, n, dt)
 }
 
 type PartCtrl struct {
@@ -87,7 +97,7 @@ func (p *PartCtrl) draw(offset *Vec3) {
 	gl.PopMatrix()
 }
 func (p *PartCtrl) update(v *Vehicle, n *PartNode, dt float32) {
-	// TODO: do nothing?
+	applyDrag(v, n, dt)
 }
 
 type PartDecoup struct {
@@ -102,6 +112,8 @@ func (p *PartDecoup) draw(offset *Vec3) {
 	gl.PopMatrix()
 }
 func (p *PartDecoup) update(v *Vehicle, n *PartNode, dt float32) {
+	applyDrag(v, n, dt)
+
 	if p.IsActive && !p.IsUsed {
 		un := n.Upper
 		n.Upper = nil
@@ -133,6 +145,8 @@ func (p *PartEngine) draw(offset *Vec3) {
 	gl.PopMatrix()
 }
 func (p *PartEngine) update(v *Vehicle, n *PartNode, dt float32) {
+	applyDrag(v, n, dt)
+
 	e := p.Def.Engine
 	if p.IsActive {
 		p.FuelFlow = e.FuelDef.Flow
@@ -141,6 +155,7 @@ func (p *PartEngine) update(v *Vehicle, n *PartNode, dt float32) {
 	}
 
 	if p.FuelMass > 0.0 {
+		// TODO to impulse apply
 		force := e.FuelDef.Impulse * p.FuelFlow * dt
 		forceVec := Vec3{0.0, 0.0, force}
 		v.Vel = v.Vel.Add(v.Rot.Rotate(forceVec).MulSca(1 / v.Mass))
@@ -161,7 +176,6 @@ type PartChute struct {
 	PartBase
 	IsUsed       bool
 	IsCut        bool
-	ExtraDrag    float32
 	ChuteGeom    *Geom1
 	ChuteAntiRot Quat
 	ChuteRot     Quat
@@ -186,12 +200,14 @@ func (p *PartChute) draw(offset *Vec3) {
 	gl.PopMatrix()
 }
 func (p *PartChute) update(v *Vehicle, n *PartNode, dt float32) {
+	applyDrag(v, n, dt)
+
 	c := p.Def.Chute
 	if p.IsActive && !p.IsCut {
 		p.ChuteAntiRot = v.Rot.Conj()
 		p.ChuteRot = NewVecDiffQuat(v.Vel, Vec3{0, 0, -1}).Norm()
 		if p.IsUsed {
-			p.DeployTime += dt
+			p.DeployTime = Min(p.DeployTime+dt, c.DeployTime)
 		} else {
 			p.DeployTime = 0
 			p.IsUsed = true
@@ -211,29 +227,17 @@ func (p *PartChute) update(v *Vehicle, n *PartNode, dt float32) {
 
 	p.Height = deployFrac * c.Height
 	p.Radius = deployFracSq * c.Height
-	dragMag := (0.5 + deployFracSq*c.Area*c.Drag) * v.Vel.LenSq() * 0.5
-	// linear impulse
-	dragForce := v.Vel.Norm().MulSca(-dragMag * dt)
-
-	// EXPERIMENTAL: impose rotation (simpified cylinder)
-	// radius from centre of mass (only works if part above root)
-	radius := Vec3{0, 0, 1}
-	// angular impulse
-	dragTorque := radius.Cross(v.Rot.Conj().Rotate(dragForce))
-	if v.Vel.Len() > 1.0 {
-		// log.Println(v.Vel.Len())
-		log.Println( /*v.Ang,*/ v.Rot.Conj().Rotate(dragForce), v.Inertia) //, dragTorque, v.Inertia)
-		v.Ang = v.Ang.Add(v.Rot.Rotate(dragTorque).Div(v.Inertia))
-		v.Vel = v.Vel.Add(dragForce.MulSca(1 / v.Mass))
-	}
 }
 func (p *PartChute) getMass() float32 {
 	return p.Def.Mass + p.Def.Chute.Mass
 }
-func (p *PartChute) getDrag(aoa float32) float32 {
-	drag := p.PartBase.getDrag(aoa)
+func (p *PartChute) getDragPremul(aoa float32) float32 {
+	c := p.Def.Chute
+	drag := p.PartBase.getDragPremul(aoa)
+	deployFrac := p.DeployTime / c.DeployTime
+	deployFracSq := deployFrac * deployFrac
 	if p.IsActive {
-		drag += p.ExtraDrag
+		drag += deployFracSq * c.Area * c.Drag
 	}
 
 	return drag
