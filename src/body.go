@@ -3,7 +3,7 @@ package rkt
 // A cylinder based collider, tapered towards one of the ends.
 // Both end circles have their centers and normals lie on the same axis.
 type Taper struct {
-	Pos         Vec3
+	Pos         Vec3 // Coplanar with lower circle
 	height      float32
 	upperRadius float32
 	lowerRadius float32

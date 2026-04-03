@@ -10,6 +10,7 @@ type Vehicle struct {
 	Name          string
 	Parts         *PartNode
 	Mass          float32
+	Com           Vec3
 	Inertia       Vec3
 	Height        float32
 	Pos, Vel, Ang Vec3
@@ -23,9 +24,6 @@ func NewVehicle(name string, root Part) *Vehicle {
 	v.Parts = NewPartNode(root)
 	v.Stages = &StageNode{nil, nil}
 	v.Rot = ZeroQuat()
-	v.UpdateHeight()
-	v.UpdateCoM()
-	v.UpdateInertia()
 	return v
 }
 
@@ -43,9 +41,6 @@ func (v *Vehicle) Fork(nodes *PartNode) *Vehicle {
 	w.Vel = v.Vel
 	w.Rot = v.Rot
 	w.Ang = v.Ang
-	v.UpdateHeight()
-	v.UpdateCoM()
-	v.UpdateInertia()
 	return w
 }
 func (v *Vehicle) Draw() {
@@ -59,6 +54,7 @@ func (v *Vehicle) Draw() {
 	for node := v.Parts.Upper; node != nil; node = node.Upper {
 		node.Part.draw(&node.Offset)
 	}
+	DrawDiamond(v.Com)
 	gl.PopMatrix()
 }
 func (v *Vehicle) Update(dt float32) {
@@ -142,25 +138,20 @@ func (v *Vehicle) UpdateCoM() {
 	}
 
 	v.Mass = totalMass
-	// for node := v.Parts.Lower; node != nil; node = node.Lower {
-	// 	com = com.Lerp(node.Offset, nodeMass/totalMass)
-	// }
-	// for node := v.Parts.Upper; node != nil; node = node.Upper {
-	// 	com = com.Lerp(node.Offset, nodeMass/totalMass)
-	// }
-	// log.Println(v.Name, com)
+	v.Com = com
+	log.Println(v.Name, com)
 }
 func (v *Vehicle) UpdateInertia() {
 	totalInertia := Vec3{}
 	for node := v.Parts.Lower; node != nil; node = node.Lower {
-		radiusSq := node.Offset.AxisLenSq()
+		radiusSq := node.Offset.Sub(v.Com).AxisLenSq()
 		mass := node.Part.getMass()
 		offset := radiusSq.MulSca(mass)
 		inertia := node.Part.getInertiaCoeff().MulSca(mass).Add(offset)
 		totalInertia = totalInertia.Add(inertia)
 	}
 	for node := v.Parts; node != nil; node = node.Upper {
-		radiusSq := node.Offset.AxisLenSq()
+		radiusSq := node.Offset.Sub(v.Com).AxisLenSq()
 		mass := node.Part.getMass()
 		offset := radiusSq.MulSca(mass)
 		inertia := node.Part.getInertiaCoeff().MulSca(mass).Add(offset)
@@ -172,12 +163,12 @@ func (v *Vehicle) UpdateInertia() {
 }
 func (v *Vehicle) ApplyImpulse(imp, pt Vec3) {
 	// angular impulse
-	torque := pt.Cross(v.Rot.Conj().Rotate(imp))
+	torque := pt.Sub(v.Com).Cross(v.Rot.Conj().Rotate(imp))
 	// TODO: only remaining energy should go into linear motion not full
 	v.Ang = v.Ang.Add(v.Rot.Rotate(torque).Div(v.Inertia))
 	v.Vel = v.Vel.Add(imp.MulSca(1.0 / v.Mass))
 	// TODO: draw force vector because why not
-	DrawForce(imp.MulSca(0.01), v.Pos.Add(v.Rot.Rotate(pt)))
+	DrawVector(imp.MulSca(0.01), v.Pos.Add(v.Rot.Rotate(pt)))
 }
 
 // BEGIN STUPID

@@ -46,8 +46,8 @@ func (p *PartBase) drawModel(offset *Vec3) {
 	}
 }
 func (p *PartBase) drawAttachPts() {
-	drawAttachPt(0.4, &p.Def.Attach.Lower)
-	drawAttachPt(0.4, &p.Def.Attach.Upper)
+	DrawDiamond(p.Def.Attach.Lower)
+	DrawDiamond(p.Def.Attach.Upper)
 }
 func (p *PartBase) Activate() {
 	p.IsActive = true
