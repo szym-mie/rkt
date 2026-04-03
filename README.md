@@ -39,26 +39,30 @@ A short and hopefully up-to-date list of things to implement:
 - Haze implemented as OpenGL fog
 - Parachutes
 - Impulse can create angular momentum
+- Calculate Centre of Mass
+- Angular movement around the CoM
+- Inertia calculated based on the simple geom. shape description
 
 #### WIP
 
-- Calculate Centre of Mass
 - Part drag calculation based on AoA (Angle of Attack)
 - Mouse-based vehicle editor
 
 #### TODO
 
-- Angular movement around the CoM
 - Altitude-dependent skybox
 - Proper terrain collisions
-- Inertia calculated based on the simple geom. shape description
+- Try out orbital mechanics
+- Fuel flow and distribution
 - Lift
 - Basic lift control devices (all moving fins)
 - Ailerons, rudders, elevators
 - Airbrakes and spoilers
 - Cockpit view
+- Migrate to OpenGL3
 
 #### IDEA
 
 - Key-based (with some mouse usage) vehicle editor
-
+- Electrical circuits: actuators, generators, batteries
+- Hydraulic circuits: servos, actuators, accumulators, pumps
