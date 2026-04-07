@@ -11,6 +11,7 @@ import (
 )
 
 var bitmapMap = make(map[string]*Bitmap, 64)
+var shaderMap = make(map[string]Shader, 64)
 var textureMap = make(map[string]Texture, 64)
 var geom1DefMap = make(map[string]*Geom1Def, 64)
 var geom2DefMap = make(map[string]*Geom2Def, 64)
@@ -20,36 +21,37 @@ var partDefMap = make(map[string]*PartDef, 64)
 func loadBitmap(r io.Reader) *Bitmap {
 	img, _, err := image.Decode(r)
 	if err != nil {
-		log.Fatalf("load_image: %v", err)
+		log.Fatalf("load_bitmap: %v", err)
 	}
 
 	rgba := image.NewRGBA(img.Bounds())
 	if rgba.Stride != rgba.Rect.Size().X*4 {
-		log.Fatalf("bitmap: bad stride %v", rgba.Stride)
+		log.Fatalf("load_bitmap: bad stride %v", rgba.Stride)
 	}
 
 	draw.Draw(rgba, rgba.Bounds(), img, image.Pt(0, 0), draw.Src)
 	return (*Bitmap)(rgba)
 }
 
+func loadShader(r io.Reader) Shader {
+	shader, err := DecodeShader(r)
+	if err != nil {
+		log.Fatalf("load_shader: %v", err)
+	}
+
+	return shader
+}
+
 func loadPartDef(r io.Reader) *PartDef {
 	def := new(PartDef)
 	dec := json.NewDecoder(r)
 	if err := dec.Decode(def); err != nil {
-		log.Fatalf("part_def: %v", err)
+		log.Fatalf("load_part_def: %v", err)
 	}
-
-	// if def.Body == nil {
-	// 	log.Fatalf("part_def: no body in %s JSON", def.Name)
-	// }
-
-	// if def.Attach == nil {
-	// 	log.Fatalf("part_def: no attach in %s JSON", def.Name)
-	// }
 
 	if def.Ctrl == nil && def.Decoup == nil &&
 		def.Engine == nil && def.Chute == nil {
-		log.Fatalf("part_def: no spec field in %s JSON", def.Name)
+		log.Fatalf("load_part_def: no spec field in %s JSON", def.Name)
 	}
 
 	return def
@@ -111,11 +113,12 @@ func LoadPkg(filename string) uint {
 			bitmap := loadBitmap(fp)
 			bitmapMap[name] = bitmap
 			textureMap[name] = bitmap.createTexture()
-			loadedCount++
+		case "glsl":
+			log.Printf("+shader %s", name)
+			shaderMap[name] = loadShader(fp)
 		case "part.json":
 			log.Printf("+partdef %s", name)
 			partDefMap[name] = loadPartDef(fp)
-			loadedCount++
 		case "geom1.json":
 			log.Printf("+geom1def %s", name)
 			geom1DefMap[name] = loadGeom1Def(fp)
@@ -125,8 +128,11 @@ func LoadPkg(filename string) uint {
 		case "patch.json":
 			log.Printf("+patchdef %s", name)
 			patchDefMap[name] = loadPatchDef(fp)
+		default:
+			continue
 		}
 
+		loadedCount++
 		fp.Close()
 	}
 
