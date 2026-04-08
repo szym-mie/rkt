@@ -7,22 +7,31 @@
 
 ## 1. Quickstart
 
-Use `go run .` from the project root.
+Use `make` from the project root to get a playable release.
 
 Move the mouse to rotate the camera around the craft.
 
-| keys    | action                                                      |
-|---------|-------------------------------------------------------------|
-|  W, S   | pitch down/up                                               |
-|  A, D   | yaw left/right                                              |
-|  Q, E   | roll left/right                                             |
-|  Space  | activate the next stage (depends on vehicle configuration)  |
-|  -, =   | zoom camera out/in                                          |
-|  Esc    | quit                                                        |
+| keys  | action                                                     |
+| ----- | ---------------------------------------------------------- |
+| W, S  | pitch down/up                                              |
+| A, D  | yaw left/right                                             |
+| Q, E  | roll left/right                                            |
+| Space | activate the next stage (depends on vehicle configuration) |
+| -, =  | zoom camera out/in                                         |
+| Esc   | quit                                                       |
 
 ## 2. Building
 
-Standard Go rules persist - please note that this project uses CGO and therefore make sure you have the right version of the GCC compiler installed on your machine (please refer to https://go.dev/doc/install/gccgo). On Windows Winlibs Mingw64 toolchain is confirmed to work properly.
+Available make actions:
+
+|      Action       | Command      |
+| :---------------: | :----------- |
+|   Build release   | `make`       |
+| Development build | `make dev`   |
+|  Clean all exes   | `make clean` |
+
+> [!IMPORTANT]
+> Please note that this project uses CGO and therefore make sure you have the right version of the GCC compiler installed on your machine (please refer to https://go.dev/doc/install/gccgo). On Windows Winlibs Mingw64 toolchain is confirmed to work properly.
 
 ## 3. Resources
 
