@@ -166,32 +166,6 @@ func main() {
 	patchInf := rkt.NewPatch("base/patch/inf")
 	patchInf.Scale = 1600.0
 
-	labelWelcome := rkt.NewLabelFor("base/font/anlg", "Welcome")
-	labelToStage := rkt.NewLabelFor("base/font/anlg", "press Space to fire the next stage")
-
-	qt := rkt.NewAxisAngleQuat(90.0, rkt.Vec3{X: 1.0, Y: 0.0, Z: 0.0})
-	qt = qt.Product(rkt.NewAxisAngleQuat(-90, rkt.Vec3{X: 0.0, Y: 1.0, Z: 0.0}))
-
-	labelWelcome.Scale = rkt.Vec2{X: 6.0, Y: 8.0}
-	labelWelcome.Rot = qt
-	labelWelcome.Pos.Y = 68.0
-	labelWelcome.Pos.Z = -168.0 + 0.1
-
-	labelToStage.Scale = rkt.Vec2{X: 2.5, Y: 5.0}
-	labelToStage.Rot = rkt.NewAxisAngleQuat(90.0, rkt.Vec3{X: 1.0, Y: 0.0, Z: 0.0})
-	labelToStage.Pos.Y = 25.0
-	labelToStage.Pos.Z = -80.0
-
-	n := mainVehicle.Stages
-	for n != nil {
-		name := "<sep>"
-		if n.Part != nil {
-			name = n.Part.GetName()
-		}
-		log.Printf("%v, ", name)
-		n = n.Next
-	}
-
 	rkt.InitDraw()
 	rkt.SetLineColor(1.0, 0.0, 0.0)
 	for !window.ShouldClose() {
@@ -219,10 +193,6 @@ func main() {
 				v.Update(float32(dt.Seconds()))
 			}
 		}
-
-		// last because transparency
-		labelWelcome.Draw()
-		labelToStage.Draw()
 
 		hud.Draw(mainVehicle.Rot)
 

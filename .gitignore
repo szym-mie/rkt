@@ -1,1 +1,8 @@
+# release exe files
+*.elf
 *.exe
+# dev tools exes
+dev_release*
+!dev_release/
+# packages artifacts
+res/*.zip
