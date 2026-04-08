@@ -1,7 +1,5 @@
 SUB_DR = dev/dev_release
-DR = dev_release
-DR_EXE = .\$(DR).exe
-DR_ELF = ./$(DR).elf
+DR = dev_release.out
 
 RES = res
 TARGET = rkt
@@ -11,45 +9,37 @@ PREREQS = main.go $(wildcard src/*.go)
 
 ifeq ($(OS), Windows_NT)
 all: $(TARGET_EXE)
-init: $(DR_EXE)
-dev: dev_winnt
 .PHONY: clean
 clean: clean_winnt
 else
 all: $(TARGET_ELF)
-init: $(DR_ELF)
-dev: dev_posix
 .PHONY: clean
 clean: clean_posix
 endif
 
-$(DR_EXE) $(DR_ELF):
-	@echo -- building $(DR)... --
+init: $(DR)
+
+$(DR):
+	@echo -- building $@... --
 	cd $(SUB_DR) && $(MAKE)
 
-$(TARGET_EXE): $(DR_EXE) $(PREREQS)
+$(TARGET_EXE) $(TARGET_ELF): $(DR) $(PREREQS)
 	@echo -- building $@... --
 	go get .
-	$(DR_EXE) -res $(RES)
-$(TARGET_ELF): $(DR_ELF) $(PREREQS)
-	@echo -- building $@... --
-	go get .
-	$(DR_ELF) -res $(RES)
+	$(DR) -res $(RES)
 
-dev_winnt: $(DR_EXE)
+devel: $(DR)
 	@echo -- start devel... --
 	go get .
-	$(DR_EXE) -dev -res $(RES)
-dev_posix: $(DR_ELF)
-	@echo -- start devel... --
-	go get .
-	$(DR_ELF) -dev -res $(RES)
+	$(DR) -dev -res $(RES)
 
 .PHONY: clean_winnt
 clean_winnt:
-	del *.exe
-	del $(RES)\*.zip
+	del *.exe 2>nul
+	del *.out 2>nul
+	del $(RES)\*.zip 2>nul
 .PHONY: clean_posix
 clean_posix:
 	rm *.elf
+	rm *.out
 	rm $(RES)\*.zip

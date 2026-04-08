@@ -1,17 +1,8 @@
-TARGET = ../../dev_release
-TARGET_EXE = $(TARGET).exe
-TARGET_ELF = $(TARGET).elf
+TARGET = ../../dev_release.out
 PREREQS = main.go $(wildcard src/*.go)
 
-ifeq ($(OS), Windows_NT)
-all: $(TARGET_EXE)
-else
-all: $(TARGET_ELF)
-endif
+all: $(TARGET)
 
-$(TARGET_EXE): $(PREREQS)
-	go get .
-	go build -o $@ .
-$(TARGET_ELF): $(PREREQS)
+$(TARGET): $(PREREQS)
 	go get .
 	go build -o $@ .

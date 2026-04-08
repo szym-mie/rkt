@@ -27,7 +27,7 @@ Available make actions:
 |      Action       | Command      |
 | :---------------: | :----------- |
 |   Build release   | `make`       |
-| Development build | `make dev`   |
+| Development build | `make devel` |
 |  Clean all exes   | `make clean` |
 
 > [!IMPORTANT]

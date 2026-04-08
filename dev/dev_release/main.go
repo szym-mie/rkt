@@ -36,8 +36,9 @@ func main() {
 	}
 
 	diffSize := int(nextSize) - int(prevSize)
-	fmt.Fprintf(os.Stderr, "%s:\n", outPath)
-	fmt.Fprintf(os.Stderr, "%d -> %d (%+d)\n", prevSize, nextSize, diffSize)
+	fmt.Fprintf(os.Stderr, "pkg> %s:\n", outPath)
+	fmt.Fprintf(os.Stderr, "pkg> %d -> %d (%+d)\n", prevSize, nextSize, diffSize)
+	fmt.Fprintln(os.Stderr, "-- pkg OK --")
 
 	if err := release.Build(".", *outName, *isDevel); err != nil {
 		fmt.Fprintf(os.Stderr, "abort: %v", err)
