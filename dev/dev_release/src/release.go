@@ -1,10 +1,9 @@
-package main
+package dev_release
 
 import (
 	"archive/zip"
 	"bufio"
 	"errors"
-	"flag"
 	"fmt"
 	"io"
 	"io/fs"
@@ -13,7 +12,7 @@ import (
 	"path/filepath"
 )
 
-func fileSize(path string) (uint, error) {
+func PathSize(path string) (uint, error) {
 	fp, err := os.Open(path)
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
@@ -80,7 +79,7 @@ func createPkgZip(w *zip.Writer, pkgName string, root fs.FS) error {
 		})
 }
 
-func createZip(resPath, pkgName, outPath string) error {
+func CreateZip(resPath, pkgName, outPath string) error {
 	outFp, err := os.Create(outPath)
 	if err != nil {
 		return fmt.Errorf("cannot create: %w", err)
@@ -99,7 +98,7 @@ func createZip(resPath, pkgName, outPath string) error {
 	return nil
 }
 
-func runCmd(name string, arg ...string) error {
+func runExec(tag, name string, arg ...string) error {
 	cmd := exec.Command(name, arg...)
 	pipe, err := cmd.StdoutPipe()
 	if err != nil {
@@ -116,66 +115,45 @@ func runCmd(name string, arg ...string) error {
 	sc := bufio.NewScanner(pipe)
 	for sc.Scan() {
 		line := sc.Text()
-		fmt.Printf("%s\n", line)
+		fmt.Printf("%s> %s\n", tag, line)
 	}
 
 	return nil
 }
 
-func runDevel(what, exe string) error {
-	outPath := exe + ".dev.exe"
-	fmt.Printf("\nbuild >>>\n")
-	if err := runCmd("go", "build", "-o", outPath, what); err != nil {
-		fmt.Printf("\n<<< build FAIL\n")
+func GetOutPath(outName string, isDevel bool) string {
+	outPathInfix := ""
+	if isDevel {
+		outPathInfix = ".dev"
+	}
+
+	return outName + outPathInfix + BinExt
+}
+
+func Build(what, outName string, isDevel bool) error {
+	arg := []string{"build", "-v"}
+	if !isDevel {
+		arg = append(arg, "-a")
+	}
+
+	arg = append(arg, "-o", GetOutPath(outName, isDevel), what)
+
+	if err := runExec("build", "go", arg...); err != nil {
+		fmt.Println("-- build FAIL --")
 		return err
 	}
-	fmt.Printf("\n<<< build OK\n")
-	fmt.Printf("\ndevel >>>\n")
-	exePath := fmt.Sprintf(".%c%s", os.PathSeparator, outPath)
-	if err := runCmd(exePath); err != nil {
-		fmt.Printf("\n<<< devel FAIL\n")
-		return err
-	}
-	fmt.Printf("\n<<< devel OK\n")
+	fmt.Println("-- build OK --")
+
 	return nil
 }
 
-func main() {
-	resPath := flag.String("res", "", "resource directory path")
-	pkgName := flag.String("pkg", "base", "package name inside of the resource directory")
-	flag.Parse()
-
-	if *resPath == "" {
-		flag.Usage()
-		fmt.Fprintf(os.Stderr, "abort: bad -res path\n")
-		os.Exit(1)
+func Run(outName string, isDevel bool) error {
+	exePath := fmt.Sprintf(
+		".%c%s", os.PathSeparator, GetOutPath(outName, isDevel))
+	if err := runExec("devel", exePath); err != nil {
+		fmt.Println("-- devel FAIL --")
+		return err
 	}
-
-	outPath := filepath.Join(*resPath, *pkgName+".zip")
-
-	prevSize, err := fileSize(outPath)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "abort: %v", err)
-		os.Exit(2)
-	}
-
-	if err := createZip(*resPath, *pkgName, outPath); err != nil {
-		fmt.Fprintf(os.Stderr, "abort: %v", err)
-		os.Exit(3)
-	}
-
-	nextSize, err := fileSize(outPath)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "abort: %v", err)
-		os.Exit(4)
-	}
-
-	diffSize := int(nextSize) - int(prevSize)
-	fmt.Fprintf(os.Stderr, "%s:\n", outPath)
-	fmt.Fprintf(os.Stderr, "%d -> %d (%+d)\n", prevSize, nextSize, diffSize)
-
-	if err := runDevel(".", "rkt"); err != nil {
-		fmt.Fprintf(os.Stderr, "abort: %v", err)
-		os.Exit(5)
-	}
+	fmt.Println("-- devel OK --")
+	return nil
 }
