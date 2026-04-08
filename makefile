@@ -29,16 +29,20 @@ $(DR_EXE) $(DR_ELF):
 
 $(TARGET_EXE): $(DR_EXE) $(PREREQS)
 	@echo -- building $@... --
+	go get .
 	$(DR_EXE) -res $(RES)
 $(TARGET_ELF): $(DR_ELF) $(PREREQS)
 	@echo -- building $@... --
+	go get .
 	$(DR_ELF) -res $(RES)
 
 dev_winnt: $(DR_EXE)
 	@echo -- start devel... --
+	go get .
 	$(DR_EXE) -dev -res $(RES)
 dev_posix: $(DR_ELF)
 	@echo -- start devel... --
+	go get .
 	$(DR_ELF) -dev -res $(RES)
 
 .PHONY: clean_winnt

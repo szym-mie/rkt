@@ -10,7 +10,8 @@ all: $(TARGET_ELF)
 endif
 
 $(TARGET_EXE): $(PREREQS)
+	go get .
 	go build -o $@ .
 $(TARGET_ELF): $(PREREQS)
-	@echo $(OS)
+	go get .
 	go build -o $@ .
