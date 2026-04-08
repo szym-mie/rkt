@@ -35,13 +35,17 @@ $(TARGET_ELF): $(DR_ELF) $(PREREQS)
 	$(DR_ELF) -res $(RES)
 
 dev_winnt: $(DR_EXE)
+	@echo -- start devel... --
 	$(DR_EXE) -dev -res $(RES)
 dev_posix: $(DR_ELF)
+	@echo -- start devel... --
 	$(DR_ELF) -dev -res $(RES)
 
 .PHONY: clean_winnt
 clean_winnt:
 	del *.exe
+	del $(RES)\*.zip
 .PHONY: clean_posix
 clean_posix:
 	rm *.elf
+	rm $(RES)\*.zip

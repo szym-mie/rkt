@@ -147,6 +147,15 @@ func Build(what, outName string, isDevel bool) error {
 	return nil
 }
 
+/*
+	fmt.Println("\n\n\n\n\x1b[7mpress [r] to restart\x1b[0m\x1b[4A")
+	b := make([]byte, 1)
+	n, _ := os.Stdin.Read(b)
+	if n > 1 {
+		fmt.Println("commence")
+	}
+*/
+
 func Run(outName string, isDevel bool) error {
 	exePath := fmt.Sprintf(
 		".%c%s", os.PathSeparator, GetOutPath(outName, isDevel))

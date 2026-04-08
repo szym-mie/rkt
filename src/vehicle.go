@@ -1,8 +1,6 @@
 package rkt
 
 import (
-	"log"
-
 	"github.com/go-gl/gl/v2.1/gl"
 )
 
@@ -139,7 +137,6 @@ func (v *Vehicle) UpdateCoM() {
 
 	v.Mass = totalMass
 	v.Com = com
-	log.Println(v.Name, com)
 }
 func (v *Vehicle) UpdateInertia() {
 	totalInertia := Vec3{}
@@ -159,7 +156,6 @@ func (v *Vehicle) UpdateInertia() {
 	}
 
 	v.Inertia = totalInertia
-	log.Println(v.Name, totalInertia)
 }
 func (v *Vehicle) ApplyImpulse(imp, pt Vec3) {
 	// angular impulse

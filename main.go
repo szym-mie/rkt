@@ -166,16 +166,6 @@ func main() {
 	patchInf := rkt.NewPatch("base/patch/inf")
 	patchInf.Scale = 1600.0
 
-	n := mainVehicle.Stages
-	for n != nil {
-		name := "<sep>"
-		if n.Part != nil {
-			name = n.Part.GetName()
-		}
-		log.Printf("%v, ", name)
-		n = n.Next
-	}
-
 	rkt.InitDraw()
 	rkt.SetLineColor(1.0, 0.0, 0.0)
 	for !window.ShouldClose() {
