@@ -1,4 +1,4 @@
-TARGET = ../../dev_release.out
+TARGET = ../dev_bake.out
 PREREQS = main.go $(wildcard src/*.go)
 
 all: $(TARGET)

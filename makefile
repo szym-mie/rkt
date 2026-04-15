@@ -1,37 +1,49 @@
-SUB_DR = dev/dev_release
-DR = dev_release.out
+# use with GNU make only
 
+SUB_DB = dev/
+OUT = rkt
 RES = res
-TARGET = rkt
-TARGET_EXE = $(TARGET).exe
-TARGET_ELF = $(TARGET).elf
 PREREQS = main.go $(wildcard src/*.go)
 
+.PHONY: all
+all: build
+.PHONY: init
+init: $(DB)
+
 ifeq ($(OS), Windows_NT)
-all: $(TARGET_EXE)
+TARGET = $(OUT).exe
+DB = .\dev_bake.out
 .PHONY: clean
 clean: clean_winnt
 else
-all: $(TARGET_ELF)
+TARGET = $(OUT).elf
+DB = ./dev_bake.out
 .PHONY: clean
 clean: clean_posix
 endif
 
-init: $(DR)
-
-$(DR):
+$(DB):
 	@echo -- building $@... --
-	cd $(SUB_DR) && $(MAKE)
+	cd $(SUB_DB) && $(MAKE)
 
-$(TARGET_EXE) $(TARGET_ELF): $(DR) $(PREREQS)
-	@echo -- building $@... --
+.PHONY: build
+build: $(DB) $(PREREQS)
+	@echo -- building $(TARGET)... --
 	go get .
-	$(DR) -res $(RES)
+	$(DB) -res $(RES) $(FLAGS)
 
-devel: $(DR)
-	@echo -- start devel... --
+.PHONY: devel
+devel: $(DB) $(PREREQS)
+	@echo -- start devel $(TARGET)... --
 	go get .
-	$(DR) -dev -res $(RES)
+	$(DB) -dev -res $(RES) $(FLAGS)
+
+.PHONY: release
+release: $(DB) $(PREREQS)
+	@echo -- release $(VER)_$(PLAT) --
+	@echo -- building $(TARGET)... --
+	go get .
+	$(DB) -rel -res $(RES) -ver $(VER) -plat $(PLAT) $(FLAGS)
 
 .PHONY: clean_winnt
 clean_winnt:
@@ -40,6 +52,6 @@ clean_winnt:
 	del $(RES)\*.zip 2>nul
 .PHONY: clean_posix
 clean_posix:
-	rm *.elf
-	rm *.out
-	rm $(RES)\*.zip
+	rm -f *.elf
+	rm -f *.out
+	rm -f $(RES)\*.zip

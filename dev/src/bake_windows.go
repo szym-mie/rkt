@@ -1,5 +1,5 @@
 //go:build windows
 
-package dev_release
+package bake
 
 const BinExt = ".exe"
