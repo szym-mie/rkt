@@ -13,6 +13,7 @@ func main() {
 	resPath := flag.String("res", "res", "resource directory path")
 	pkgName := flag.String("pkg", "base", "package name inside of the resource directory")
 	outName := flag.String("out", "rkt", "output executable name")
+	isBuildAll := flag.Bool("all", false, "rebuild all")
 	isDevel := flag.Bool("dev", false, "run development build")
 	flag.Parse()
 
@@ -40,7 +41,7 @@ func main() {
 	fmt.Fprintf(os.Stderr, "pkg> %d -> %d (%+d)\n", prevSize, nextSize, diffSize)
 	fmt.Fprintln(os.Stderr, "-- pkg OK --")
 
-	if err := release.Build(".", *outName, *isDevel); err != nil {
+	if err := release.Build(".", *outName, *isBuildAll); err != nil {
 		fmt.Fprintf(os.Stderr, "abort: %v", err)
 		os.Exit(5)
 	}
