@@ -1,5 +1,6 @@
 {
     "texture": "base/part/chute0",
+    "shader": "base/glsl/phong1",
     "vertex": [
         [-0.344415, -0.831492, 3.300000],
         [-0.707107, -0.707107, 3.000000],

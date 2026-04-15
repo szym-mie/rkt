@@ -1,5 +1,6 @@
 {
     "texture": "base/patch/rktasm",
+    "shader": "base/glsl/phong1",
     "vertex": [
         [-32.000000, -31.999998, 0.000000],
         [-20.000000, -32.000000, 11.999999],

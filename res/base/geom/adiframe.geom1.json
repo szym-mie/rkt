@@ -1,5 +1,6 @@
 {
     "texture": "base/hud/adiframe",
+    "shader": "base/glsl/nolight1",
     "vertex": [
         [1.000000, -1.000000, 0.000000],
         [-1.000000, 1.000000, 0.000000],

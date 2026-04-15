@@ -1,5 +1,6 @@
 {
     "texture": "base/patch/home",
+    "shader": "base/glsl/phong1",
     "vertex": [
         [3.000000, 3.000000, 0.000000],
         [0.000000, 3.000000, 0.000000],

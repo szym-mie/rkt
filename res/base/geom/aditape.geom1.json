@@ -1,5 +1,6 @@
 {
     "texture": "base/hud/aditape",
+    "shader": "base/glsl/nolight1",
     "vertex": [
         [0.866025, 0.000000, -0.500000],
         [0.754407, -0.133022, -0.642788],

@@ -7,6 +7,7 @@ import (
 )
 
 type Geom1Def struct {
+	ShaderName  string `json:"shader"`
 	TextureName string `json:"texture"`
 	Vertices    []Vec3 `json:"vertex"`
 	TexCoords   []Vec2 `json:"texcoord"`
@@ -14,6 +15,11 @@ type Geom1Def struct {
 
 func (d *Geom1Def) create() *Geom1 {
 	g := new(Geom1)
+	shader, ok := shaderMap[d.ShaderName]
+	if !ok {
+		log.Fatalf("create: no such shader %s", d.ShaderName)
+	}
+
 	texture, ok := textureMap[d.TextureName]
 	if !ok {
 		log.Fatalf("create: no such texture %s", d.TextureName)
@@ -24,9 +30,16 @@ func (d *Geom1Def) create() *Geom1 {
 		log.Fatalf("create: vertices and texcoords lens mismatch")
 	}
 
+	g.Shader = shader
 	g.Texture = texture
 	g.Vertices = make([]Vec3, count)
 	g.TexCoords = make([]Vec2, count)
+	gl.GenBuffers(1, &g.VertexBuf)
+	gl.BindBuffer(gl.ARRAY_BUFFER, g.VertexBuf)
+	gl.BufferData(gl.ARRAY_BUFFER, count*3*4, gl.Ptr(d.Vertices), gl.STATIC_DRAW)
+	gl.GenBuffers(1, &g.TexCoordBuf)
+	gl.BindBuffer(gl.ARRAY_BUFFER, g.TexCoordBuf)
+	gl.BufferData(gl.ARRAY_BUFFER, count*2*4, gl.Ptr(d.TexCoords), gl.STATIC_DRAW)
 	copy(g.Vertices, d.Vertices)
 	copy(g.TexCoords, d.TexCoords)
 	g.Count = count
@@ -34,14 +47,18 @@ func (d *Geom1Def) create() *Geom1 {
 }
 
 type Geom1 struct {
-	Texture   Texture
-	Vertices  []Vec3
-	TexCoords []Vec2
-	Count     int
+	Shader      Shader
+	Texture     Texture
+	Vertices    []Vec3
+	TexCoords   []Vec2
+	VertexBuf   uint32
+	TexCoordBuf uint32
+	Count       int
 }
 
-func NewGeom1(texture Texture, triCount int) *Geom1 {
+func NewGeom1(shader Shader, texture Texture, triCount int) *Geom1 {
 	g := new(Geom1)
+	g.Shader = shader
 	g.Texture = texture
 	g.Count = triCount * 3
 	g.Vertices = make([]Vec3, g.Count)
@@ -51,6 +68,7 @@ func NewGeom1(texture Texture, triCount int) *Geom1 {
 
 func (g *Geom1) clone() *Geom1 {
 	n := new(Geom1)
+	n.Shader = g.Shader
 	n.Texture = g.Texture
 	n.Count = g.Count
 	n.Vertices = make([]Vec3, g.Count)
@@ -60,7 +78,11 @@ func (g *Geom1) clone() *Geom1 {
 	return n
 }
 func (g *Geom1) draw() {
+	g.Shader.active()
 	g.Texture.bind()
+	uDiffTexture := g.Shader.getUniform("u_DiffTexture")
+	aPos := g.Shader.getAttrib("a_Pos")
+	aTexCoord0 := g.Shader.getAttrib("a_TexCoord0")
 	gl.Begin(gl.TRIANGLES)
 	for i := range g.Count {
 		v := g.Vertices[i]

@@ -1,5 +1,6 @@
 {
     "texture": "base/ui/drawvector",
+    "shader": "base/glsl/phong1",
     "vertex": [
         [0.100000, 0.100000, 0.000000],
         [-0.100000, -0.100000, 0.000000],

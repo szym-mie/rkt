@@ -119,11 +119,11 @@ func NewShader(vertSrc, fragSrc string) (Shader, error) {
 	return s, nil
 }
 
-func (s Shader) getAttrib(name string) int32 {
-	return gl.GetAttribLocation(uint32(s), gl.Str(name+"\x00"))
+func (s Shader) getAttrib(name string) uint32 {
+	return uint32(gl.GetAttribLocation(uint32(s), gl.Str(name+"\x00")))
 }
-func (s Shader) getUniform(name string) int32 {
-	return gl.GetUniformLocation(uint32(s), gl.Str(name+"\x00"))
+func (s Shader) getUniform(name string) uint32 {
+	return uint32(gl.GetUniformLocation(uint32(s), gl.Str(name+"\x00")))
 }
 func (s Shader) active() {
 	gl.UseProgram(uint32(s))
