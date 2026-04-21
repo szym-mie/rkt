@@ -68,6 +68,7 @@ func (v Vec3) AxisLenSq() Vec3 {
 	return Vec3{y + z, x + z, x + y}
 }
 func (v Vec3) Apply() {
+	panic("wypierdalaccccc")
 	// gl.Translatef(v.X, v.Y, v.Z)
 }
 func (v Vec3) Add(u Vec3) Vec3 {

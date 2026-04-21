@@ -1,6 +1,7 @@
 {
     "texture0": "base/patch/inf",
     "texture1": "base/patch/sub",
+    "shader": "base/glsl/phong2",
     "vertex": [
         [-0.000000, -0.000000, -0.020000],
         [32.000000, 0.000000, -0.020000],

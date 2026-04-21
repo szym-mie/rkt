@@ -76,11 +76,10 @@ func (p *PatchObj) draw() {
 
 func (p *Patch) Draw() {
 	model := NewMatrix4Pos(p.Pos)
-	p.Pos.Apply()
 	for _, obj := range p.objs {
 		obj.draw()
 	}
 
 	model.Scale1(p.Scale)
-	p.geom.draw()
+	p.geom.draw(model)
 }

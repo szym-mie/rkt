@@ -16,6 +16,12 @@ var geom1BufferAttrs = []BufferAttr{
 	{BufferAttrTexCoord0, "a_TexCoord0", 2},
 }
 
+var geom2BufferAttrs = []BufferAttr{
+	{BufferAttrPos, "a_Pos", 3},
+	{BufferAttrTexCoord0, "a_TexCoord0", 2},
+	{BufferAttrTexCoord1, "a_TexCoord1", 2},
+}
+
 func (d *Geom1Def) create() *Geom1 {
 	g := new(Geom1)
 	shader, ok := shaderMap[d.ShaderName]
@@ -99,6 +105,7 @@ func (g *Geom1) drawTexOffset(texCoordOffset Vec2) {
 }
 
 type Geom2Def struct {
+	ShaderName   string `json:"shader"`
 	Texture0Name string `json:"texture0"`
 	Texture1Name string `json:"texture1"`
 	Vertices     []Vec3 `json:"vertex"`
@@ -106,19 +113,22 @@ type Geom2Def struct {
 	TexCoords1   []Vec2 `json:"texcoord1"`
 }
 
-func NewGeom2(texture0, texture1 Texture, triCount int) *Geom2 {
+func NewGeom2(shader Shader, texture0, texture1 Texture) *Geom2 {
 	g := new(Geom2)
+	g.Shader = shader
 	g.Texture0 = texture0
 	g.Texture1 = texture1
-	g.Count = triCount * 3
-	g.Vertices = make([]Vec3, g.Count)
-	g.TexCoords0 = make([]Vec2, g.Count)
-	g.TexCoords1 = make([]Vec2, g.Count)
+	g.Buffer = NewBuffer(shader, geom1BufferAttrs)
 	return g
 }
 
 func (d *Geom2Def) create() *Geom2 {
 	g := new(Geom2)
+	shader, ok := shaderMap[d.ShaderName]
+	if !ok {
+		log.Fatalf("create: no such shader %s", d.ShaderName)
+	}
+
 	texture0, ok := textureMap[d.Texture0Name]
 	if !ok {
 		log.Fatalf("create: no such texture %s", d.Texture0Name)
@@ -134,41 +144,47 @@ func (d *Geom2Def) create() *Geom2 {
 		log.Fatalf("create: vertices and texcoords lens mismatch")
 	}
 
+	g.Shader = shader
 	g.Texture0 = texture0
 	g.Texture1 = texture1
-	g.Vertices = make([]Vec3, count)
-	g.TexCoords0 = make([]Vec2, count)
-	g.TexCoords1 = make([]Vec2, count)
-	copy(g.Vertices, d.Vertices)
-	copy(g.TexCoords0, d.TexCoords0)
-	copy(g.TexCoords1, d.TexCoords1)
-	g.Count = count
+	g.Buffer = NewBuffer(shader, geom2BufferAttrs)
+	bufferData := g.Buffer.newDataArray(count)
+	i := int32(0)
+	for j := range count {
+		bufferData[i+0] = d.Vertices[j].X
+		bufferData[i+1] = d.Vertices[j].Y
+		bufferData[i+2] = d.Vertices[j].Z
+		i += g.Buffer.Attrs[0].Size
+		bufferData[i+0] = d.TexCoords0[j].X
+		bufferData[i+1] = d.TexCoords0[j].Y
+		i += g.Buffer.Attrs[1].Size
+		bufferData[i+0] = d.TexCoords1[j].X
+		bufferData[i+1] = d.TexCoords1[j].Y
+		i += g.Buffer.Attrs[2].Size
+	}
+	g.Buffer.data(bufferData)
+
 	return g
 }
 
 type Geom2 struct {
-	Texture0   Texture
-	Texture1   Texture
-	Vertices   []Vec3
-	TexCoords0 []Vec2
-	TexCoords1 []Vec2
-	Count      int
+	Shader   Shader
+	Texture0 Texture
+	Texture1 Texture
+	Buffer   *Buffer
+	Count    int // unused
 }
 
 func (g *Geom2) clone() *Geom2 {
 	n := new(Geom2)
+	n.Shader = g.Shader
 	n.Texture0 = g.Texture0
 	n.Texture1 = g.Texture1
+	n.Buffer = g.Buffer
 	n.Count = g.Count
-	n.Vertices = make([]Vec3, g.Count)
-	n.TexCoords0 = make([]Vec2, g.Count)
-	n.TexCoords1 = make([]Vec2, g.Count)
-	copy(g.Vertices, n.Vertices)
-	copy(g.TexCoords0, n.TexCoords0)
-	copy(g.TexCoords1, n.TexCoords1)
 	return n
 }
-func (g *Geom2) draw() {
+func (g *Geom2) draw(m *Matrix4) {
 	// g.Texture0.bindTo(0)
 	// g.Texture1.bindTo(1)
 	// g.Texture0.setFilter(TextureFilterLinear)
@@ -181,6 +197,20 @@ func (g *Geom2) draw() {
 	// 	gl.MultiTexCoord2f(gl.TEXTURE1, t1.X, t1.Y)
 	// 	gl.Vertex3f(v.X, v.Y, v.Z)
 	// }
+
+	g.Shader.active()
+	g.Texture0.bindTo(0)
+	g.Texture1.bindTo(1)
+	uDiffTexture0 := g.Shader.getUniform("u_DiffTexture0")
+	uDiffTexture1 := g.Shader.getUniform("u_DiffTexture1")
+	uVPMatrix := g.Shader.getUniform("u_VPMatrix")
+	uMMatrix := g.Shader.getUniform("u_MMatrix")
+	g.Texture0.uniform(uDiffTexture0, 0)
+	g.Texture1.uniform(uDiffTexture1, 1)
+	ActiveCamera.pvMatrix.uniform(uVPMatrix)
+	m.uniform(uMMatrix)
+	g.Buffer.bind()
+	g.Buffer.draw()
 
 	// gl.End()
 }
