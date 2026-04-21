@@ -1,7 +1,7 @@
 //+vert
-#version 120
+#version 330 core
 
-in vec3 a_Pos;
+layout (location = 0) in vec3 a_Pos;
 // layout (location = 0) in vec3 a_Pos;
 
 out vec3 v_Pos;
@@ -13,7 +13,7 @@ void main() {
     v_Pos = a_Pos;
 }
 //+frag
-#version 120
+#version 330 core
 precision mediump float;
 
 out vec4 f_Color;

@@ -2,8 +2,6 @@ package rkt
 
 import (
 	"log"
-
-	"github.com/go-gl/gl/v2.1/gl"
 )
 
 type Geom1Def struct {
@@ -11,6 +9,11 @@ type Geom1Def struct {
 	TextureName string `json:"texture"`
 	Vertices    []Vec3 `json:"vertex"`
 	TexCoords   []Vec2 `json:"texcoord"`
+}
+
+var geom1BufferAttrs = []BufferAttr{
+	{BufferAttrPos, "a_Pos", 3},
+	{BufferAttrTexCoord0, "a_TexCoord0", 2},
 }
 
 func (d *Geom1Def) create() *Geom1 {
@@ -32,37 +35,35 @@ func (d *Geom1Def) create() *Geom1 {
 
 	g.Shader = shader
 	g.Texture = texture
-	g.Vertices = make([]Vec3, count)
-	g.TexCoords = make([]Vec2, count)
-	gl.GenBuffers(1, &g.VertexBuf)
-	gl.BindBuffer(gl.ARRAY_BUFFER, g.VertexBuf)
-	gl.BufferData(gl.ARRAY_BUFFER, count*3*4, gl.Ptr(d.Vertices), gl.STATIC_DRAW)
-	gl.GenBuffers(1, &g.TexCoordBuf)
-	gl.BindBuffer(gl.ARRAY_BUFFER, g.TexCoordBuf)
-	gl.BufferData(gl.ARRAY_BUFFER, count*2*4, gl.Ptr(d.TexCoords), gl.STATIC_DRAW)
-	copy(g.Vertices, d.Vertices)
-	copy(g.TexCoords, d.TexCoords)
-	g.Count = count
+	g.Buffer = NewBuffer(shader, geom1BufferAttrs)
+	bufferData := g.Buffer.newDataArray(count)
+	i := int32(0)
+	for j := range count {
+		bufferData[i+0] = d.Vertices[j].X
+		bufferData[i+1] = d.Vertices[j].Y
+		bufferData[i+2] = d.Vertices[j].Z
+		i += g.Buffer.Attrs[0].Size
+		bufferData[i+0] = d.TexCoords[j].X
+		bufferData[i+1] = d.TexCoords[j].Y
+		i += g.Buffer.Attrs[1].Size
+	}
+	g.Buffer.data(bufferData)
+
 	return g
 }
 
 type Geom1 struct {
-	Shader      Shader
-	Texture     Texture
-	Vertices    []Vec3
-	TexCoords   []Vec2
-	VertexBuf   uint32
-	TexCoordBuf uint32
-	Count       int
+	Shader  Shader
+	Texture Texture
+	Buffer  *Buffer
+	Count   int // unused
 }
 
-func NewGeom1(shader Shader, texture Texture, triCount int) *Geom1 {
+func NewGeom1(shader Shader, texture Texture) *Geom1 {
 	g := new(Geom1)
 	g.Shader = shader
 	g.Texture = texture
-	g.Count = triCount * 3
-	g.Vertices = make([]Vec3, g.Count)
-	g.TexCoords = make([]Vec2, g.Count)
+	g.Buffer = NewBuffer(shader, geom1BufferAttrs)
 	return g
 }
 
@@ -70,40 +71,31 @@ func (g *Geom1) clone() *Geom1 {
 	n := new(Geom1)
 	n.Shader = g.Shader
 	n.Texture = g.Texture
+	n.Buffer = g.Buffer
 	n.Count = g.Count
-	n.Vertices = make([]Vec3, g.Count)
-	n.TexCoords = make([]Vec2, g.Count)
-	copy(g.Vertices, n.Vertices)
-	copy(g.TexCoords, n.TexCoords)
 	return n
 }
-func (g *Geom1) draw() {
+func (g *Geom1) draw(m *Matrix4) {
 	g.Shader.active()
 	g.Texture.bind()
 	uDiffTexture := g.Shader.getUniform("u_DiffTexture")
-	aPos := g.Shader.getAttrib("a_Pos")
-	aTexCoord0 := g.Shader.getAttrib("a_TexCoord0")
-	gl.Begin(gl.TRIANGLES)
-	for i := range g.Count {
-		v := g.Vertices[i]
-		t := g.TexCoords[i]
-		gl.TexCoord2f(t.X, t.Y)
-		gl.Vertex3f(v.X, v.Y, v.Z)
-	}
-
-	gl.End()
+	uVPMatrix := g.Shader.getUniform("u_VPMatrix")
+	uMMatrix := g.Shader.getUniform("u_MMatrix")
+	g.Texture.uniform(uDiffTexture, 0)
+	ActiveCamera.pvMatrix.uniform(uVPMatrix)
+	m.uniform(uMMatrix)
+	g.Buffer.bind()
+	g.Buffer.draw()
 }
 func (g *Geom1) drawTexOffset(texCoordOffset Vec2) {
-	g.Texture.bind()
-	gl.Begin(gl.TRIANGLES)
-	for i := range g.Count {
-		v := g.Vertices[i]
-		t := g.TexCoords[i]
-		gl.TexCoord2f(t.X+texCoordOffset.X, t.Y+texCoordOffset.Y)
-		gl.Vertex3f(v.X, v.Y, v.Z)
-	}
-
-	gl.End()
+	// g.Texture.bind()
+	// for i := range g.Count {
+	// 	v := g.Vertices[i]
+	// 	t := g.TexCoords[i]
+	// 	gl.TexCoord2f(t.X+texCoordOffset.X, t.Y+texCoordOffset.Y)
+	// 	gl.Vertex3f(v.X, v.Y, v.Z)
+	// }
+	// TODO: bind and draw
 }
 
 type Geom2Def struct {
@@ -177,18 +169,18 @@ func (g *Geom2) clone() *Geom2 {
 	return n
 }
 func (g *Geom2) draw() {
-	g.Texture0.bindTo(0)
-	g.Texture1.bindTo(1)
-	g.Texture0.setFilter(TextureFilterLinear)
-	gl.Begin(gl.TRIANGLES)
-	for i := range g.Count {
-		v := g.Vertices[i]
-		t0 := g.TexCoords0[i]
-		t1 := g.TexCoords1[i]
-		gl.MultiTexCoord2f(gl.TEXTURE0, t0.X, t0.Y)
-		gl.MultiTexCoord2f(gl.TEXTURE1, t1.X, t1.Y)
-		gl.Vertex3f(v.X, v.Y, v.Z)
-	}
+	// g.Texture0.bindTo(0)
+	// g.Texture1.bindTo(1)
+	// g.Texture0.setFilter(TextureFilterLinear)
+	// gl.Begin(gl.TRIANGLES)
+	// for i := range g.Count {
+	// 	v := g.Vertices[i]
+	// 	t0 := g.TexCoords0[i]
+	// 	t1 := g.TexCoords1[i]
+	// 	gl.MultiTexCoord2f(gl.TEXTURE0, t0.X, t0.Y)
+	// 	gl.MultiTexCoord2f(gl.TEXTURE1, t1.X, t1.Y)
+	// 	gl.Vertex3f(v.X, v.Y, v.Z)
+	// }
 
-	gl.End()
+	// gl.End()
 }

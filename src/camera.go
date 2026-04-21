@@ -1,31 +1,36 @@
 package rkt
 
 import (
-	"github.com/go-gl/gl/v2.1/gl"
+	"math"
+
 	"github.com/go-gl/glfw/v3.3/glfw"
 )
+
+var ActiveCamera *Camera
 
 type Camera struct {
 	Target       *Vehicle
 	FocusPos     Vec3
 	lastMousePos Vec2
 	mouseSpeed   float32
-	depthNear    float64
-	depthFar     float64
+	depthNear    float32
+	depthFar     float32
 	width        uint16
 	height       uint16
+	projMatrix   Matrix4
+	viewMatrix   Matrix4
+	pvMatrix     Matrix4
 	Radius       float32
 	pitch        float32
 	yaw          float32
 }
 
-func NewCamera(depthNear, depthFar float64, mouseSpeed float32) *Camera {
+func NewCamera(depthNear, depthFar float32, mouseSpeed float32) *Camera {
 	c := new(Camera)
 	c.depthNear = depthNear
 	c.depthFar = depthFar
 	c.mouseSpeed = mouseSpeed
 	c.Radius = 10.0
-
 	return c
 }
 
@@ -35,25 +40,26 @@ func (c *Camera) SetViewport(width, height uint16) {
 	c.SetProjection()
 }
 func (c *Camera) SetProjection() {
-	gl.MatrixMode(gl.PROJECTION)
-	gl.PopMatrix()
-	gl.LoadIdentity()
-	f := float64(c.width)/float64(c.height) - 1.0
-	gl.Frustum(-1.0-f, 1.0+f, -1.0, 1.0, c.depthNear, c.depthFar)
-	gl.PushMatrix()
+	aspect := float32(c.width) / float32(c.height)
+	c.projMatrix.Frustum(aspect, c.depthNear, c.depthFar)
+	c.updatePv()
 }
 func (c *Camera) CaptureMouse(window *glfw.Window) {
 	window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
 }
-func (c *Camera) Apply() {
-	gl.MatrixMode(gl.MODELVIEW)
-	gl.LoadIdentity()
-	gl.Translatef(0.0, 0.0, -c.Radius)
-	gl.Rotatef(90.0, 0.0, 0.0, 1.0) // y <-> z
-	gl.Rotatef(90.0, 0.0, 1.0, 0.0) // y <-> z
-	gl.Rotatef(-c.pitch, 0.0, 1.0, 0.0)
-	gl.Rotatef(c.yaw, 0.0, 0.0, 1.0)
-	c.FocusPos.Apply()
+func (c *Camera) UpdateView() {
+	c.viewMatrix.SetIdentity()
+	c.viewMatrix.SetPos(Vec3{0.0, 0.0, -c.Radius})
+	c.viewMatrix.RotZ(math.Pi * 0.5)
+	c.viewMatrix.RotY(math.Pi * 0.5)
+	c.viewMatrix.RotY(-c.pitch)
+	c.viewMatrix.RotZ(c.yaw)
+	trans := NewMatrix4Pos(c.FocusPos)
+	c.viewMatrix.MulSelf(trans)
+	c.updatePv()
+}
+func (c *Camera) updatePv() {
+	c.pvMatrix = *c.projMatrix.Mul(&c.viewMatrix)
 }
 func (c *Camera) Update(mousePos Vec2) {
 	if c.Target != nil {
@@ -66,5 +72,6 @@ func (c *Camera) Update(mousePos Vec2) {
 	c.lastMousePos = mousePos
 	c.yaw += diffPos.X / float32(c.width) * c.mouseSpeed
 	c.pitch += diffPos.Y / float32(c.height) * c.mouseSpeed
-	c.pitch = min(max(c.pitch, -90.0), 90.0)
+	c.pitch = min(max(c.pitch, -math.Pi*0.5), math.Pi*0.5)
+	c.UpdateView()
 }

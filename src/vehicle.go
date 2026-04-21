@@ -1,9 +1,5 @@
 package rkt
 
-import (
-	"github.com/go-gl/gl/v2.1/gl"
-)
-
 type Vehicle struct {
 	Name          string
 	Parts         *PartNode
@@ -42,18 +38,15 @@ func (v *Vehicle) Fork(nodes *PartNode) *Vehicle {
 	return w
 }
 func (v *Vehicle) Draw() {
-	gl.MatrixMode(gl.MODELVIEW)
-	gl.PushMatrix()
-	v.Pos.Apply()
-	v.Rot.Apply()
+	model := NewMatrix4Pos(v.Pos)
+	model.MulSelf(v.Rot.Apply())
 	for node := v.Parts; node != nil; node = node.Lower {
-		node.Part.draw(&node.Offset)
+		node.Part.draw(model, &node.Offset)
 	}
 	for node := v.Parts.Upper; node != nil; node = node.Upper {
-		node.Part.draw(&node.Offset)
+		node.Part.draw(model, &node.Offset)
 	}
 	DrawDiamond(v.Com)
-	gl.PopMatrix()
 }
 func (v *Vehicle) Update(dt float32) {
 	v.UpdateHeight()

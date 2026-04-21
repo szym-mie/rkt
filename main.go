@@ -8,7 +8,7 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 
-	"github.com/go-gl/gl/v2.1/gl"
+	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 	rkt "szymm.org/rkt/src"
 )
@@ -112,15 +112,15 @@ func main() {
 	gl.DepthFunc(gl.LESS)
 	gl.ClearDepth(1.0)
 
-	fog := [4]float32{0.2, 0.7, 0.8, 0.0}
-	gl.Enable(gl.FOG)
-	gl.Fogi(gl.FOG_MODE, gl.LINEAR)
-	gl.Fogi(gl.FOG_COORD_SRC, gl.FRAGMENT_DEPTH)
-	gl.Fogfv(gl.FOG_COLOR, &fog[0])
-	gl.Fogf(gl.FOG_DENSITY, 0.05)
-	gl.Hint(gl.FOG_HINT, gl.NICEST)
-	gl.Fogf(gl.FOG_START, 1.0)
-	gl.Fogf(gl.FOG_END, 5000.0)
+	// fog := [4]float32{0.2, 0.7, 0.8, 0.0}
+	// gl.Enable(gl.FOG)
+	// gl.Fogi(gl.FOG_MODE, gl.LINEAR)
+	// gl.Fogi(gl.FOG_COORD_SRC, gl.FRAGMENT_DEPTH)
+	// gl.Fogfv(gl.FOG_COLOR, &fog[0])
+	// gl.Fogf(gl.FOG_DENSITY, 0.05)
+	// gl.Hint(gl.FOG_HINT, gl.NICEST)
+	// gl.Fogf(gl.FOG_START, 1.0)
+	// gl.Fogf(gl.FOG_END, 5000.0)
 
 	gl.Enable(gl.BLEND)
 	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
@@ -134,7 +134,7 @@ func main() {
 	hud := rkt.NewHud()
 	hud.SetViewport(w, h)
 
-	camera := rkt.NewCamera(1.0, 8000.0, 100.0)
+	camera := rkt.NewCamera(1.0, 8000.0, 10.0)
 	camera.SetViewport(w, h)
 	camera.CaptureMouse(window)
 
@@ -168,6 +168,7 @@ func main() {
 
 	rkt.InitDraw()
 	rkt.SetLineColor(1.0, 0.0, 0.0)
+	rkt.ActiveCamera = camera
 	for !window.ShouldClose() {
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
@@ -178,7 +179,6 @@ func main() {
 		mousePos := rkt.Vec2{X: float32(x), Y: float32(y)}
 		camera.SetProjection()
 		camera.Update(mousePos)
-		camera.Apply()
 
 		dt := time.Millisecond * 25
 

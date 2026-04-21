@@ -24,15 +24,34 @@ type TaperDef struct {
 	Lower       TaperEndDef `json:"lower"`
 }
 
+const bodyShaderName = "base/glsl/phong1"
+
+func setVec2At(arr []float32, i *int, v Vec2) {
+	arr[*i+0] = v.X
+	arr[*i+1] = v.Y
+	*i += 2
+}
+func setVec3At(arr []float32, i *int, v Vec3) {
+	arr[*i+0] = v.X
+	arr[*i+1] = v.Y
+	arr[*i+2] = v.Z
+	*i += 3
+}
+
 func (d *TaperDef) buildGeom() *Geom1 {
 	rc := d.RingCount
+	shader, ok := shaderMap[bodyShaderName]
+	if !ok {
+		log.Fatalf("build_geom: no such shader %s\n", bodyShaderName)
+	}
+
 	texture, ok := textureMap[d.TextureName]
 	if !ok {
 		log.Fatalf("build_geom: no such texture %s\n", d.TextureName)
 	}
 
-	g := NewGeom1(texture, rc*4)
-	endCount := rc * 3
+	g := NewGeom1(shader, texture)
+	bufferData := g.Buffer.newDataArray(rc * 4 * 3)
 
 	upperVts := buildRingVertices(rc, d.Upper.Radius, d.Upper.Offset)
 	lowerVts := buildRingVertices(rc, d.Lower.Radius, d.Lower.Offset)
@@ -40,41 +59,38 @@ func (d *TaperDef) buildGeom() *Geom1 {
 	lowerEndTCs := buildRingEndTexCoords(rc, 1)
 	upperSideTCs := buildRingSideTexCoords(rc, 1)
 	lowerSideTCs := buildRingSideTexCoords(rc, 2)
-	for i := range rc {
-		j := (i + 1) % rc
-		ui := i * 3
-		li := ui + endCount
-		si := i*6 + 2*endCount
+	i := 0
+	for j := range rc {
+		k := (j + 1) % rc
 
 		// end vertex
-		g.Vertices[ui+0] = Vec3{0.0, 0.0, d.Upper.Offset}
-		g.Vertices[ui+1] = upperVts[i]
-		g.Vertices[ui+2] = upperVts[j]
-		g.Vertices[li+0] = Vec3{0.0, 0.0, d.Lower.Offset}
-		g.Vertices[li+1] = lowerVts[j]
-		g.Vertices[li+2] = lowerVts[i]
-		// end texcoord
-		g.TexCoords[ui+0] = Vec2{0.25, 0.25}
-		g.TexCoords[ui+1] = upperEndTCs[i]
-		g.TexCoords[ui+2] = upperEndTCs[j]
-		g.TexCoords[li+0] = Vec2{0.75, 0.25}
-		g.TexCoords[li+1] = lowerEndTCs[j]
-		g.TexCoords[li+2] = lowerEndTCs[i]
-		// side vertex
-		g.Vertices[si+0] = upperVts[j]
-		g.Vertices[si+1] = upperVts[i]
-		g.Vertices[si+2] = lowerVts[i]
-		g.Vertices[si+3] = lowerVts[i]
-		g.Vertices[si+4] = lowerVts[j]
-		g.Vertices[si+5] = upperVts[j]
-		// side texcoord
-		g.TexCoords[si+0] = upperSideTCs[j]
-		g.TexCoords[si+1] = upperSideTCs[i]
-		g.TexCoords[si+2] = lowerSideTCs[i]
-		g.TexCoords[si+3] = lowerSideTCs[i]
-		g.TexCoords[si+4] = lowerSideTCs[j]
-		g.TexCoords[si+5] = upperSideTCs[j]
+		setVec3At(bufferData, &i, Vec3{0.0, 0.0, d.Upper.Offset})
+		setVec2At(bufferData, &i, Vec2{0.25, 0.25})
+		setVec3At(bufferData, &i, upperVts[j])
+		setVec2At(bufferData, &i, upperEndTCs[j])
+		setVec3At(bufferData, &i, upperVts[k])
+		setVec2At(bufferData, &i, upperEndTCs[k])
+		setVec3At(bufferData, &i, Vec3{0.0, 0.0, d.Lower.Offset})
+		setVec2At(bufferData, &i, Vec2{0.75, 0.25})
+		setVec3At(bufferData, &i, lowerVts[k])
+		setVec2At(bufferData, &i, lowerEndTCs[k])
+		setVec3At(bufferData, &i, lowerVts[j])
+		setVec2At(bufferData, &i, lowerEndTCs[j])
+		// side
+		setVec3At(bufferData, &i, upperVts[k])
+		setVec2At(bufferData, &i, upperSideTCs[k])
+		setVec3At(bufferData, &i, upperVts[j])
+		setVec2At(bufferData, &i, upperSideTCs[j])
+		setVec3At(bufferData, &i, lowerVts[j])
+		setVec2At(bufferData, &i, lowerSideTCs[j])
+		setVec3At(bufferData, &i, lowerVts[j])
+		setVec2At(bufferData, &i, lowerSideTCs[j])
+		setVec3At(bufferData, &i, lowerVts[k])
+		setVec2At(bufferData, &i, lowerSideTCs[k])
+		setVec3At(bufferData, &i, upperVts[k])
+		setVec2At(bufferData, &i, upperSideTCs[k])
 	}
+	g.Buffer.data(bufferData)
 
 	return g
 }
@@ -87,7 +103,5 @@ func (d *PlaneDef) buildGeom() *Geom1 {
 	g := new(Geom1)
 	g.Texture = textureMap[d.TextureName]
 	g.Count = 0
-	g.Vertices = nil
-	g.TexCoords = nil
 	return g
 }

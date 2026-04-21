@@ -1,8 +1,8 @@
 //+vert
-#version 120
+#version 330 core
 
-in vec3 a_Pos;
-in vec2 a_TexCoord0;
+layout (location = 0) in vec3 a_Pos;
+layout (location = 4) in vec2 a_TexCoord0;
 // layout (location = 0) in vec3 a_Pos;
 // layout (location = 1) in vec3 a_Norm;
 // layout (location = 2) in vec2 a_TexCoord0;
@@ -17,7 +17,7 @@ void main() {
     v_TexCoord0 = a_TexCoord0;
 }
 //+frag
-#version 120
+#version 330 core
 precision mediump float;
 
 out vec4 f_Color;

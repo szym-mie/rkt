@@ -4,13 +4,14 @@ import (
 	"log"
 	"math"
 
-	"github.com/go-gl/gl/v2.1/gl"
+	"github.com/go-gl/gl/v3.3-core/gl"
 )
 
 type Hud struct {
-	width  uint16
-	height uint16
-	adi    *Adi
+	width      uint16
+	height     uint16
+	projMatrix Matrix4
+	adi        *Adi
 }
 
 type Adi struct {
@@ -35,13 +36,8 @@ func (h *Hud) SetViewport(width, height uint16) {
 	h.SetProjection()
 }
 func (h *Hud) SetProjection() {
-	gl.MatrixMode(gl.PROJECTION)
-	gl.PopMatrix()
-	gl.LoadIdentity()
-	f := float64(h.width)/float64(h.height) - 1.0
-	// same as default projection, but with aspect correction
-	gl.Ortho(-1.0-f, 1.0+f, -1.0, 1.0, -1.0, 1.0)
-	gl.PushMatrix()
+	aspect := float32(h.width) / float32(h.height)
+	h.projMatrix.Ortho(aspect, -1.0, 1.0)
 }
 func (h *Hud) Draw(input Quat) {
 	gl.Disable(gl.DEPTH_TEST)
@@ -71,27 +67,23 @@ func buildAdi() *Adi {
 }
 
 func (v *Adi) draw(input Quat) {
-	gl.MatrixMode(gl.MODELVIEW)
-	gl.PushMatrix()
-	gl.LoadIdentity()
-	v.pos.Apply()
+	model := Matrix4{}
+	model.SetIdentity()
+	model.SetPos(v.pos)
 	pr := input.Rotate(Vec3{0, 0, 1})
 	up := input.Rotate(Vec3{1, 0, 0})
 	lf := input.Rotate(Vec3{0, 1, 0})
 	pitch := math.Asin(float64(Clamp(pr.Z, -1.0, 1.0)))
 	roll := -math.Atan2(float64(lf.Z), float64(up.Z))
 	yaw := -math.Atan2(float64(pr.X), float64(pr.Y))
-	gl.Rotated(roll/math.Pi*180, 0.0, 0.0, 1.0)
-	gl.Rotated((pitch-math.Pi*0.5)/math.Pi*180, 1.0, 0.0, 0.0)
-	gl.Rotated(yaw/math.Pi*180, 0.0, 0.0, 1.0)
-	gl.Scalef(v.scale, v.scale, v.scale)
-	v.tapeGeom.draw()
-	gl.PopMatrix()
+	model.RotZ(float32(roll))
+	model.RotX(float32(pitch - math.Pi*0.5))
+	model.RotZ(float32(yaw))
+	model.Scale1(v.scale)
+	v.tapeGeom.draw(&model)
 
-	gl.PushMatrix()
-	gl.LoadIdentity()
-	v.pos.Add(Vec3{Z: 1.0}).Apply()
-	gl.Scalef(v.scale, v.scale, v.scale)
-	v.frameGeom.draw()
-	gl.PopMatrix()
+	model.SetIdentity()
+	model.SetPos(v.pos.Add(Vec3{Z: 1.0}))
+	model.Scale1(v.scale)
+	v.frameGeom.draw(&model)
 }

@@ -3,7 +3,7 @@ package rkt
 import (
 	"image"
 
-	"github.com/go-gl/gl/v2.1/gl"
+	"github.com/go-gl/gl/v3.3-core/gl"
 )
 
 type Bitmap image.RGBA
@@ -34,7 +34,7 @@ func (t Texture) setRepeat(repeatEnable bool) {
 	if repeatEnable {
 		param = gl.REPEAT
 	} else {
-		param = gl.CLAMP
+		param = gl.CLAMP_TO_BORDER
 	}
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, param)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, param)
@@ -46,6 +46,10 @@ func (t Texture) bind() {
 func (t Texture) bindTo(unit uint32) {
 	gl.ActiveTexture(gl.TEXTURE0 + unit)
 	gl.BindTexture(gl.TEXTURE_2D, uint32(t))
+}
+func (t Texture) uniform(location int32, unit uint32) {
+	t.bindTo(unit)
+	gl.Uniform1i(location, int32(unit))
 }
 
 func InitTextureUnit(unit uint32) {

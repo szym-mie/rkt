@@ -130,13 +130,13 @@ func GetOutPath(outName string, isDevel bool) string {
 	return outName + outPathInfix + BinExt
 }
 
-func Build(what, outName string, isFull bool) error {
+func Build(what, outName string, isDevel, isFull bool) error {
 	arg := []string{"build", "-v"}
 	if isFull {
 		arg = append(arg, "-a")
 	}
 
-	arg = append(arg, "-o", GetOutPath(outName, isFull), what)
+	arg = append(arg, "-o", GetOutPath(outName, isDevel), what)
 
 	if err := runExec("build", "go", arg...); err != nil {
 		fmt.Println("-- build FAIL --")

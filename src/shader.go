@@ -6,7 +6,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/go-gl/gl/v2.1/gl"
+	"github.com/go-gl/gl/v3.3-core/gl"
 )
 
 type ShaderUnitType uint
@@ -60,7 +60,7 @@ func compileShader(unitSrc string, unitType ShaderUnitType) (ShaderUnit, error) 
 		gl.GetShaderInfoLog(h, logLen, nil, gl.Str(log))
 
 		return 0, fmt.Errorf(
-			"compile_shader: %v compile failed:\n%v\n///\n%v",
+			"compile_shader: %v compile failed:\n+msg%v\n+src\n%v\n",
 			unitType, log, unitSrc)
 	}
 
@@ -119,11 +119,11 @@ func NewShader(vertSrc, fragSrc string) (Shader, error) {
 	return s, nil
 }
 
-func (s Shader) getAttrib(name string) uint32 {
-	return uint32(gl.GetAttribLocation(uint32(s), gl.Str(name+"\x00")))
+func (s Shader) getAttrib(name string) int32 {
+	return gl.GetAttribLocation(uint32(s), gl.Str(name+"\x00"))
 }
-func (s Shader) getUniform(name string) uint32 {
-	return uint32(gl.GetUniformLocation(uint32(s), gl.Str(name+"\x00")))
+func (s Shader) getUniform(name string) int32 {
+	return gl.GetUniformLocation(uint32(s), gl.Str(name+"\x00"))
 }
 func (s Shader) active() {
 	gl.UseProgram(uint32(s))

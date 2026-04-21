@@ -41,7 +41,7 @@ func main() {
 	fmt.Fprintf(os.Stderr, "pkg> %d -> %d (%+d)\n", prevSize, nextSize, diffSize)
 	fmt.Fprintln(os.Stderr, "-- pkg OK --")
 
-	if err := release.Build(".", *outName, *isBuildAll); err != nil {
+	if err := release.Build(".", *outName, *isDevel, *isBuildAll); err != nil {
 		fmt.Fprintf(os.Stderr, "abort: %v", err)
 		os.Exit(5)
 	}

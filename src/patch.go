@@ -2,8 +2,6 @@ package rkt
 
 import (
 	"log"
-
-	"github.com/go-gl/gl/v2.1/gl"
 )
 
 type PatchObjDef struct {
@@ -72,22 +70,17 @@ func NewPatch(patchName string) *Patch {
 }
 
 func (p *PatchObj) draw() {
-	gl.MatrixMode(gl.MODELVIEW)
-	gl.PushMatrix()
-	p.pos.Apply()
-	p.geom.draw()
-	gl.PopMatrix()
+	model := NewMatrix4Pos(p.pos)
+	p.geom.draw(model)
 }
 
 func (p *Patch) Draw() {
-	gl.MatrixMode(gl.MODELVIEW)
-	gl.PushMatrix()
+	model := NewMatrix4Pos(p.Pos)
 	p.Pos.Apply()
 	for _, obj := range p.objs {
 		obj.draw()
 	}
 
-	gl.Scalef(p.Scale, p.Scale, p.Scale)
+	model.Scale1(p.Scale)
 	p.geom.draw()
-	gl.PopMatrix()
 }
