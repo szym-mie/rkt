@@ -1,24 +1,16 @@
 package rkt
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
 )
 
 type Geom1Def struct {
-	ShaderName  string    `json:"shader"`
-	TextureName string    `json:"texture"`
-	Vertices    []Vec3    `json:"vertex"`
-	TexCoords   []Vec2    `json:"texcoord"`
-	RawArray    []float32 `json:"-"`
-}
-
-var geom1BufferAttrs = []BufferAttr{
-	{BufferAttrPos, "a_Pos", 3},
-	{BufferAttrNorm, "a_Norm", 3},
-	{BufferAttrUV0, "a_UV0", 2},
+	ShaderName  string
+	TextureName string
+	BufferAttrs []BufferAttr
+	RawArray    []float32
 }
 
 var geom2BufferAttrs = []BufferAttr{
@@ -39,34 +31,10 @@ func (d *Geom1Def) create() *Geom1 {
 		log.Fatalf("create: no such texture %s", d.TextureName)
 	}
 
-	count := len(d.Vertices)
-	if count != len(d.TexCoords) {
-		log.Fatalf("create: vertices and texcoords lens mismatch")
-	}
-
 	g.Shader = shader
 	g.Texture = texture
-	g.Buffer = NewBuffer(shader, geom1BufferAttrs)
-	if d.RawArray != nil {
-		fmt.Println(d.TextureName)
-		for i := range 5 {
-			fmt.Println(d.RawArray[i])
-		}
-		g.Buffer.data(d.RawArray)
-	} else {
-		bufferData := g.Buffer.newDataArray(count)
-		i := int32(0)
-		for j := range count {
-			bufferData[i+0] = d.Vertices[j].X
-			bufferData[i+1] = d.Vertices[j].Y
-			bufferData[i+2] = d.Vertices[j].Z
-			i += g.Buffer.Attrs[0].Size
-			bufferData[i+0] = d.TexCoords[j].X
-			bufferData[i+1] = d.TexCoords[j].Y
-			i += g.Buffer.Attrs[1].Size
-		}
-		g.Buffer.data(bufferData)
-	}
+	g.Buffer = NewBuffer(shader, d.BufferAttrs)
+	g.Buffer.data(d.RawArray)
 
 	return g
 }
@@ -75,15 +43,6 @@ type Geom1 struct {
 	Shader  Shader
 	Texture Texture
 	Buffer  *Buffer
-	Count   int // unused
-}
-
-func NewGeom1(shader Shader, texture Texture) *Geom1 {
-	g := new(Geom1)
-	g.Shader = shader
-	g.Texture = texture
-	g.Buffer = NewBuffer(shader, geom1BufferAttrs)
-	return g
 }
 
 func (g *Geom1) clone() *Geom1 {
@@ -91,7 +50,6 @@ func (g *Geom1) clone() *Geom1 {
 	n.Shader = g.Shader
 	n.Texture = g.Texture
 	n.Buffer = g.Buffer
-	n.Count = g.Count
 	return n
 }
 func (g *Geom1) draw(m *Matrix4) {
@@ -137,15 +95,6 @@ type Geom2Def struct {
 	TexCoords1   []Vec2 `json:"texcoord1"`
 }
 
-func NewGeom2(shader Shader, texture0, texture1 Texture) *Geom2 {
-	g := new(Geom2)
-	g.Shader = shader
-	g.Texture0 = texture0
-	g.Texture1 = texture1
-	g.Buffer = NewBuffer(shader, geom1BufferAttrs)
-	return g
-}
-
 func (d *Geom2Def) create() *Geom2 {
 	g := new(Geom2)
 	shader, ok := shaderMap[d.ShaderName]
@@ -178,13 +127,13 @@ func (d *Geom2Def) create() *Geom2 {
 		bufferData[i+0] = d.Vertices[j].X
 		bufferData[i+1] = d.Vertices[j].Y
 		bufferData[i+2] = d.Vertices[j].Z
-		i += g.Buffer.Attrs[0].Size
+		i += g.Buffer.Attrs[0].Cocnt
 		bufferData[i+0] = d.TexCoords0[j].X
 		bufferData[i+1] = d.TexCoords0[j].Y
-		i += g.Buffer.Attrs[1].Size
+		i += g.Buffer.Attrs[1].Cocnt
 		bufferData[i+0] = d.TexCoords1[j].X
 		bufferData[i+1] = d.TexCoords1[j].Y
-		i += g.Buffer.Attrs[2].Size
+		i += g.Buffer.Attrs[2].Cocnt
 	}
 	g.Buffer.data(bufferData)
 

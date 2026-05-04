@@ -57,16 +57,6 @@ func loadPartDef(r io.Reader) *PartDef {
 	return def
 }
 
-func loadGeom1Def(r io.Reader) *Geom1Def {
-	def := new(Geom1Def)
-	dec := json.NewDecoder(r)
-	if err := dec.Decode(def); err != nil {
-		log.Fatalf("load_geom1_def: %v\n", err)
-	}
-
-	return def
-}
-
 func loadGeom2Def(r io.Reader) *Geom2Def {
 	def := new(Geom2Def)
 	dec := json.NewDecoder(r)
@@ -91,6 +81,15 @@ func loadBMLGeom(r io.Reader) *Geom1Def {
 		case 'T': // Texture name
 			def.TextureName = extern.Name
 		}
+	}
+	bufferAttrCnt := len(bml.Header.Attribs)
+	def.BufferAttrs = make([]BufferAttr, bufferAttrCnt)
+	log.Printf("%s+%s\n", def.ShaderName, def.TextureName)
+	for i, bmlAttrib := range bml.Header.Attribs {
+		log.Printf("%v\n", bmlAttrib)
+		def.BufferAttrs[i].Type = BufferAttrType(bmlAttrib.Bindp)
+		def.BufferAttrs[i].Cocnt = int32(bmlAttrib.Cocnt)
+		def.BufferAttrs[i].Name = bmlAttrib.Name
 	}
 	def.RawArray = bml.Buffer
 	return def
@@ -135,18 +134,15 @@ func LoadPkg(filename string) uint {
 		case "glsl":
 			log.Printf("+shader %s", name)
 			shaderMap[name] = loadShader(fp)
-		case "part.json":
-			log.Printf("+partdef %s", name)
-			partDefMap[name] = loadPartDef(fp)
-		case "geom1.json":
-			log.Printf("+geom1def %s", name)
-			geom1DefMap[name] = loadGeom1Def(fp)
 		case "bml":
 			log.Printf("+bml %s", name)
 			geom1DefMap[name] = loadBMLGeom(fp)
 		case "geom2.json":
 			log.Printf("+geom2def %s", name)
 			geom2DefMap[name] = loadGeom2Def(fp)
+		case "part.json":
+			log.Printf("+partdef %s", name)
+			partDefMap[name] = loadPartDef(fp)
 		case "patch.json":
 			log.Printf("+patchdef %s", name)
 			patchDefMap[name] = loadPatchDef(fp)

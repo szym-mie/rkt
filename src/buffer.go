@@ -1,8 +1,6 @@
 package rkt
 
 import (
-	"log"
-
 	"github.com/go-gl/gl/v3.3-core/gl"
 )
 
@@ -17,9 +15,9 @@ const (
 )
 
 type BufferAttr struct {
-	Type BufferAttrType // type of buffer attr
-	Name string         // shader location name
-	Size int32          // number of components
+	Type  BufferAttrType // type of buffer attr
+	Name  string         // shader location name
+	Cocnt int32          // number of components
 }
 
 type Buffer struct {
@@ -49,7 +47,7 @@ func (b *Buffer) confAttrs(attrs []BufferAttr) {
 	stride := int32(0)
 	for _, attr := range attrs {
 		// only floats supported
-		stride += attr.Size * 4
+		stride += attr.Cocnt * 4
 	}
 	b.Stride1 = stride
 	b.Stride4 = stride / 4
@@ -72,14 +70,13 @@ func (b *Buffer) data(data []float32) {
 	size := len(data)
 	gl.BindVertexArray(b.vaoHandle)
 	gl.BindBuffer(gl.ARRAY_BUFFER, b.vboHandle)
-	log.Println(data[0])
 	gl.BufferData(gl.ARRAY_BUFFER, size*4, gl.Ptr(data), gl.STATIC_DRAW)
 	b.Cnt = int32(size) / b.Stride4
 	offset := uintptr(0)
 	stride := int32(0)
 	for _, attr := range b.Attrs {
 		// only floats supported
-		stride += attr.Size * 4
+		stride += attr.Cocnt * 4
 	}
 	b.Stride1 = stride
 	b.Stride4 = stride / 4
@@ -89,10 +86,10 @@ func (b *Buffer) data(data []float32) {
 		// index := attr.Type
 		index := b.shader.getAttrib(attr.Name)
 		gl.VertexAttribPointerWithOffset(
-			uint32(index), attr.Size, gl.FLOAT,
+			uint32(index), attr.Cocnt, gl.FLOAT,
 			false, stride, offset)
 		gl.EnableVertexAttribArray(uint32(index))
-		offset += uintptr(attr.Size * 4)
+		offset += uintptr(attr.Cocnt * 4)
 	}
 }
 func (b *Buffer) bind() {
