@@ -28,19 +28,7 @@ out vec4 f_Color;
 in vec3 v_FragPos;
 in vec3 v_Norm;
 in vec2 v_UV0;
-/*
-struct DirLight {
-    vec3 dir;
-    vec3 color;
-    float power;
-}
 
-struct PtLight {
-    vec3 pos;
-    vec3 color;
-    float power;
-}
-*/
 uniform sampler2D u_DiffTexture;
 uniform vec3 u_AmbLightColor;
 uniform vec3 u_DirLightDir[2];

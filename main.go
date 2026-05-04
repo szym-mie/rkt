@@ -173,8 +173,8 @@ func main() {
 
 	patch00 := rkt.NewPatch("base/patch/00")
 	patch00.Scale = 1600.0
-	patchInf := rkt.NewPatch("base/patch/inf")
-	patchInf.Scale = 1600.0
+	// patchInf := rkt.NewPatch("base/patch/inf")
+	// patchInf.Scale = 1600.0
 
 	rkt.InitDraw()
 	rkt.SetLineColor(1.0, 0.0, 0.0)
@@ -193,7 +193,7 @@ func main() {
 		dt := time.Millisecond * 25
 
 		patch00.Draw()
-		patchInf.Draw()
+		// patchInf.Draw()
 		for _, v := range rkt.Vehicles {
 			if v == nil {
 				break

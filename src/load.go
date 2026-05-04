@@ -57,42 +57,63 @@ func loadPartDef(r io.Reader) *PartDef {
 	return def
 }
 
-func loadGeom2Def(r io.Reader) *Geom2Def {
-	def := new(Geom2Def)
-	dec := json.NewDecoder(r)
-	if err := dec.Decode(def); err != nil {
-		log.Fatalf("load_geom2_def: %v\n", err)
-	}
-
-	return def
-}
+const maxTextureCnt = 4
 
 // TODO: BML supports up to 2 UV maps
-func loadBMLGeom(r io.Reader) *Geom1Def {
+func loadBMLGeom(r io.Reader) (*Geom1Def, *Geom2Def) {
 	bml, err := ReadBML(r)
 	if err != nil {
 		log.Fatalf("load_bml_geom: %v\n", err)
 	}
-	def := new(Geom1Def)
+
+	shaderName := ""
+	textureNames := make([]string, maxTextureCnt)
+	textureCnt := 0
 	for _, extern := range bml.Header.Externs {
 		switch extern.What {
 		case 'S': // Shader name
-			def.ShaderName = extern.Name
+			shaderName = extern.Name
 		case 'T': // Texture name
-			def.TextureName = extern.Name
+			if textureCnt < maxTextureCnt {
+				textureNames[textureCnt] = extern.Name
+				textureCnt++
+			}
 		}
 	}
+
 	bufferAttrCnt := len(bml.Header.Attribs)
-	def.BufferAttrs = make([]BufferAttr, bufferAttrCnt)
-	log.Printf("%s+%s\n", def.ShaderName, def.TextureName)
-	for i, bmlAttrib := range bml.Header.Attribs {
-		log.Printf("%v\n", bmlAttrib)
-		def.BufferAttrs[i].Type = BufferAttrType(bmlAttrib.Bindp)
-		def.BufferAttrs[i].Cocnt = int32(bmlAttrib.Cocnt)
-		def.BufferAttrs[i].Name = bmlAttrib.Name
+	switch textureCnt {
+	case 1:
+		def1 := new(Geom1Def)
+		def1.ShaderName = shaderName
+		def1.TextureName = textureNames[0]
+		def1.BufferAttrs = make([]BufferAttr, bufferAttrCnt)
+		for i, bmlAttrib := range bml.Header.Attribs {
+			def1.BufferAttrs[i].Type = BufferAttrType(bmlAttrib.Bindp)
+			def1.BufferAttrs[i].Cocnt = int32(bmlAttrib.Cocnt)
+			def1.BufferAttrs[i].Name = bmlAttrib.Name
+		}
+		def1.RawArray = bml.Buffer
+		return def1, nil
+	case 3:
+		def2 := new(Geom2Def)
+		def2.ShaderName = shaderName
+		def2.Texture0Name = textureNames[0]
+		def2.Texture1Name = textureNames[1]
+		def2.Texture2Name = textureNames[2]
+		def2.BufferAttrs = make([]BufferAttr, bufferAttrCnt)
+		for i, bmlAttrib := range bml.Header.Attribs {
+			def2.BufferAttrs[i].Type = BufferAttrType(bmlAttrib.Bindp)
+			def2.BufferAttrs[i].Cocnt = int32(bmlAttrib.Cocnt)
+			def2.BufferAttrs[i].Name = bmlAttrib.Name
+		}
+		def2.RawArray = bml.Buffer
+		return nil, def2
+	default:
+		log.Fatalf("load_bml_geom: invalid number of textures %d\n", textureCnt)
 	}
-	def.RawArray = bml.Buffer
-	return def
+
+	return nil, nil
 }
 
 func loadPatchDef(r io.Reader) *PatchDef {
@@ -136,10 +157,13 @@ func LoadPkg(filename string) uint {
 			shaderMap[name] = loadShader(fp)
 		case "bml":
 			log.Printf("+bml %s", name)
-			geom1DefMap[name] = loadBMLGeom(fp)
-		case "geom2.json":
-			log.Printf("+geom2def %s", name)
-			geom2DefMap[name] = loadGeom2Def(fp)
+			geom1Def, geom2Def := loadBMLGeom(fp)
+			if geom1Def != nil {
+				geom1DefMap[name] = geom1Def
+			}
+			if geom2Def != nil {
+				geom2DefMap[name] = geom2Def
+			}
 		case "part.json":
 			log.Printf("+partdef %s", name)
 			partDefMap[name] = loadPartDef(fp)
