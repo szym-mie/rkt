@@ -1,9 +1,9 @@
 # rkt
 
-![sshot1](./promo/sshot1.png)
-![sshot2](./promo/sshot2.png)
-![sshot3](./promo/sshot3.png)
-![sshot4](./promo/sshot4.png)
+![sshot1](./promo/sshot1.jpg)
+![sshot2](./promo/sshot2.jpg)
+![sshot3](./promo/sshot3.jpg)
+![sshot4](./promo/sshot4.jpg)
 
 ## 1. Quickstart
 
