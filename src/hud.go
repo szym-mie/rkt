@@ -8,10 +8,10 @@ import (
 )
 
 type Hud struct {
-	width      uint16
-	height     uint16
-	projMatrix Matrix4
-	adi        *Adi
+	PVMatrixPair
+	width  uint16
+	height uint16
+	adi    *Adi
 }
 
 type Adi struct {
@@ -37,7 +37,8 @@ func (h *Hud) SetViewport(width, height uint16) {
 }
 func (h *Hud) SetProjection() {
 	aspect := float32(h.width) / float32(h.height)
-	h.projMatrix.Ortho(aspect, -1.0, 1.0)
+	h.ProjMatrix.Ortho(aspect, -1.0, 1.0)
+	h.ViewMatrix.SetIdentity()
 }
 func (h *Hud) Draw(input Quat) {
 	gl.Disable(gl.DEPTH_TEST)

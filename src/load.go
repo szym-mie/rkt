@@ -77,6 +77,25 @@ func loadGeom2Def(r io.Reader) *Geom2Def {
 	return def
 }
 
+// TODO: BML supports up to 2 UV maps
+func loadBMLGeom(r io.Reader) *Geom1Def {
+	bml, err := ReadBML(r)
+	if err != nil {
+		log.Fatalf("load_bml_geom: %v\n", err)
+	}
+	def := new(Geom1Def)
+	for _, extern := range bml.Header.Externs {
+		switch extern.What {
+		case 'S': // Shader name
+			def.ShaderName = extern.Name
+		case 'T': // Texture name
+			def.TextureName = extern.Name
+		}
+	}
+	def.RawArray = bml.Buffer
+	return def
+}
+
 func loadPatchDef(r io.Reader) *PatchDef {
 	def := new(PatchDef)
 	dec := json.NewDecoder(r)
@@ -122,6 +141,9 @@ func LoadPkg(filename string) uint {
 		case "geom1.json":
 			log.Printf("+geom1def %s", name)
 			geom1DefMap[name] = loadGeom1Def(fp)
+		case "bml":
+			log.Printf("+bml %s", name)
+			geom1DefMap[name] = loadBMLGeom(fp)
 		case "geom2.json":
 			log.Printf("+geom2def %s", name)
 			geom2DefMap[name] = loadGeom2Def(fp)

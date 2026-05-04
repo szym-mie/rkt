@@ -154,7 +154,7 @@ func (v *Vehicle) ApplyImpulse(imp, pt Vec3) {
 	// angular impulse
 	torque := pt.Sub(v.Com).Cross(v.Rot.Conj().Rotate(imp))
 	// TODO: only remaining energy should go into linear motion not full
-	v.Ang = v.Ang.Add(v.Rot.Rotate(torque).Div(v.Inertia))
+	v.Ang = v.Ang.Add(v.Rot.Rotate(torque.Div(v.Inertia)))
 	v.Vel = v.Vel.Add(imp.MulSca(1.0 / v.Mass))
 	// TODO: draw force vector because why not
 	DrawVector(imp.MulSca(0.01), v.Pos.Add(v.Rot.Rotate(pt)))

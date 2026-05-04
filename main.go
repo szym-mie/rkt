@@ -122,6 +122,16 @@ func main() {
 	// gl.Fogf(gl.FOG_START, 1.0)
 	// gl.Fogf(gl.FOG_END, 5000.0)
 
+	// fp, _ := os.Open("bmlcube.bml")
+	// bml, err := rkt.ReadBML(fp)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// } else {
+	// 	log.Println(bml.Header.ElemCount)
+	// 	log.Println(bml.Header.Externs)
+	// 	log.Println(bml.Header.Attribs)
+	// }
+
 	gl.Enable(gl.BLEND)
 	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
@@ -168,7 +178,6 @@ func main() {
 
 	rkt.InitDraw()
 	rkt.SetLineColor(1.0, 0.0, 0.0)
-	rkt.ActiveCamera = camera
 	for !window.ShouldClose() {
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
@@ -179,6 +188,7 @@ func main() {
 		mousePos := rkt.Vec2{X: float32(x), Y: float32(y)}
 		camera.SetProjection()
 		camera.Update(mousePos)
+		rkt.ActivePV = &camera.PVMatrixPair
 
 		dt := time.Millisecond * 25
 
@@ -194,6 +204,7 @@ func main() {
 			}
 		}
 
+		rkt.ActivePV = &hud.PVMatrixPair
 		hud.Draw(mainVehicle.Rot)
 
 		time.Sleep(dt)

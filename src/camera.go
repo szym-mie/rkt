@@ -6,9 +6,8 @@ import (
 	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
-var ActiveCamera *Camera
-
 type Camera struct {
+	PVMatrixPair
 	Target       *Vehicle
 	FocusPos     Vec3
 	lastMousePos Vec2
@@ -17,9 +16,6 @@ type Camera struct {
 	depthFar     float32
 	width        uint16
 	height       uint16
-	projMatrix   Matrix4
-	viewMatrix   Matrix4
-	pvMatrix     Matrix4
 	Radius       float32
 	pitch        float32
 	yaw          float32
@@ -41,25 +37,20 @@ func (c *Camera) SetViewport(width, height uint16) {
 }
 func (c *Camera) SetProjection() {
 	aspect := float32(c.width) / float32(c.height)
-	c.projMatrix.Frustum(aspect, c.depthNear, c.depthFar)
-	c.updatePv()
+	c.ProjMatrix.Frustum(aspect, c.depthNear, c.depthFar)
 }
 func (c *Camera) CaptureMouse(window *glfw.Window) {
 	window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
 }
 func (c *Camera) UpdateView() {
-	c.viewMatrix.SetIdentity()
-	c.viewMatrix.SetPos(Vec3{0.0, 0.0, -c.Radius})
-	c.viewMatrix.RotZ(math.Pi * 0.5)
-	c.viewMatrix.RotY(math.Pi * 0.5)
-	c.viewMatrix.RotY(-c.pitch)
-	c.viewMatrix.RotZ(c.yaw)
+	c.ViewMatrix.SetIdentity()
+	c.ViewMatrix.SetPos(Vec3{0.0, 0.0, -c.Radius})
+	c.ViewMatrix.RotZ(math.Pi * 0.5)
+	c.ViewMatrix.RotY(math.Pi * 0.5)
+	c.ViewMatrix.RotY(-c.pitch)
+	c.ViewMatrix.RotZ(c.yaw)
 	trans := NewMatrix4Pos(c.FocusPos)
-	c.viewMatrix.MulSelf(trans)
-	c.updatePv()
-}
-func (c *Camera) updatePv() {
-	c.pvMatrix = *c.projMatrix.Mul(&c.viewMatrix)
+	c.ViewMatrix.MulSelf(trans)
 }
 func (c *Camera) Update(mousePos Vec2) {
 	if c.Target != nil {

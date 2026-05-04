@@ -1,25 +1,30 @@
 package rkt
 
 import (
+	"fmt"
 	"log"
+
+	"github.com/go-gl/gl/v3.3-core/gl"
 )
 
 type Geom1Def struct {
-	ShaderName  string `json:"shader"`
-	TextureName string `json:"texture"`
-	Vertices    []Vec3 `json:"vertex"`
-	TexCoords   []Vec2 `json:"texcoord"`
+	ShaderName  string    `json:"shader"`
+	TextureName string    `json:"texture"`
+	Vertices    []Vec3    `json:"vertex"`
+	TexCoords   []Vec2    `json:"texcoord"`
+	RawArray    []float32 `json:"-"`
 }
 
 var geom1BufferAttrs = []BufferAttr{
 	{BufferAttrPos, "a_Pos", 3},
-	{BufferAttrTexCoord0, "a_TexCoord0", 2},
+	{BufferAttrNorm, "a_Norm", 3},
+	{BufferAttrUV0, "a_UV0", 2},
 }
 
 var geom2BufferAttrs = []BufferAttr{
 	{BufferAttrPos, "a_Pos", 3},
-	{BufferAttrTexCoord0, "a_TexCoord0", 2},
-	{BufferAttrTexCoord1, "a_TexCoord1", 2},
+	{BufferAttrUV0, "a_UV0", 2},
+	{BufferAttrUV1, "a_UV1", 2},
 }
 
 func (d *Geom1Def) create() *Geom1 {
@@ -42,18 +47,26 @@ func (d *Geom1Def) create() *Geom1 {
 	g.Shader = shader
 	g.Texture = texture
 	g.Buffer = NewBuffer(shader, geom1BufferAttrs)
-	bufferData := g.Buffer.newDataArray(count)
-	i := int32(0)
-	for j := range count {
-		bufferData[i+0] = d.Vertices[j].X
-		bufferData[i+1] = d.Vertices[j].Y
-		bufferData[i+2] = d.Vertices[j].Z
-		i += g.Buffer.Attrs[0].Size
-		bufferData[i+0] = d.TexCoords[j].X
-		bufferData[i+1] = d.TexCoords[j].Y
-		i += g.Buffer.Attrs[1].Size
+	if d.RawArray != nil {
+		fmt.Println(d.TextureName)
+		for i := range 5 {
+			fmt.Println(d.RawArray[i])
+		}
+		g.Buffer.data(d.RawArray)
+	} else {
+		bufferData := g.Buffer.newDataArray(count)
+		i := int32(0)
+		for j := range count {
+			bufferData[i+0] = d.Vertices[j].X
+			bufferData[i+1] = d.Vertices[j].Y
+			bufferData[i+2] = d.Vertices[j].Z
+			i += g.Buffer.Attrs[0].Size
+			bufferData[i+0] = d.TexCoords[j].X
+			bufferData[i+1] = d.TexCoords[j].Y
+			i += g.Buffer.Attrs[1].Size
+		}
+		g.Buffer.data(bufferData)
 	}
-	g.Buffer.data(bufferData)
 
 	return g
 }
@@ -85,10 +98,20 @@ func (g *Geom1) draw(m *Matrix4) {
 	g.Shader.active()
 	g.Texture.bind()
 	uDiffTexture := g.Shader.getUniform("u_DiffTexture")
-	uVPMatrix := g.Shader.getUniform("u_VPMatrix")
+	uAmbLightColor := g.Shader.getUniform("u_AmbLightColor")
+	uDirLightDir := g.Shader.getUniform("u_DirLightDir")
+	uDirLightColor := g.Shader.getUniform("u_DirLightColor")
+	uPMatrix := g.Shader.getUniform("u_PMatrix")
+	uVMatrix := g.Shader.getUniform("u_VMatrix")
 	uMMatrix := g.Shader.getUniform("u_MMatrix")
+	dirLightDir := []float32{0.7, 0.3, 0.5, 0.0, 0.0, -1.0}
+	dirLightColor := []float32{1.0, 0.5, 0.3, 0.0, 0.25, 0.5}
+	gl.Uniform3f(uAmbLightColor, 0.0, 0.1, 0.2)
+	gl.Uniform3fv(uDirLightDir, 2, &dirLightDir[0])
+	gl.Uniform3fv(uDirLightColor, 2, &dirLightColor[0])
 	g.Texture.uniform(uDiffTexture, 0)
-	ActiveCamera.pvMatrix.uniform(uVPMatrix)
+	ActivePV.ProjMatrix.uniform(uPMatrix)
+	ActivePV.ViewMatrix.uniform(uVMatrix)
 	m.uniform(uMMatrix)
 	g.Buffer.bind()
 	g.Buffer.draw()
@@ -203,11 +226,13 @@ func (g *Geom2) draw(m *Matrix4) {
 	g.Texture1.bindTo(1)
 	uDiffTexture0 := g.Shader.getUniform("u_DiffTexture0")
 	uDiffTexture1 := g.Shader.getUniform("u_DiffTexture1")
-	uVPMatrix := g.Shader.getUniform("u_VPMatrix")
+	uPMatrix := g.Shader.getUniform("u_PMatrix")
+	uVMatrix := g.Shader.getUniform("u_VMatrix")
 	uMMatrix := g.Shader.getUniform("u_MMatrix")
 	g.Texture0.uniform(uDiffTexture0, 0)
 	g.Texture1.uniform(uDiffTexture1, 1)
-	ActiveCamera.pvMatrix.uniform(uVPMatrix)
+	ActivePV.ProjMatrix.uniform(uPMatrix)
+	ActivePV.ViewMatrix.uniform(uVMatrix)
 	m.uniform(uMMatrix)
 	g.Buffer.bind()
 	g.Buffer.draw()

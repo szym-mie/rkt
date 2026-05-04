@@ -9,11 +9,11 @@ import (
 type BufferAttrType int8
 
 const (
-	BufferAttrPos       BufferAttrType = 0
-	BufferAttrNorm      BufferAttrType = 1
-	BufferAttrTang      BufferAttrType = 2
-	BufferAttrTexCoord0 BufferAttrType = 4
-	BufferAttrTexCoord1 BufferAttrType = 5
+	BufferAttrPos  BufferAttrType = 0
+	BufferAttrNorm BufferAttrType = 1
+	BufferAttrTang BufferAttrType = 2
+	BufferAttrUV0  BufferAttrType = 4
+	BufferAttrUV1  BufferAttrType = 5
 )
 
 type BufferAttr struct {
@@ -84,7 +84,7 @@ func (b *Buffer) data(data []float32) {
 	b.Stride1 = stride
 	b.Stride4 = stride / 4
 	for _, attr := range b.Attrs {
-		// TOOD: if only using fixed locations:
+		// TODO: if only using fixed locations:
 		// unnecessary - the code is executed very rarely
 		// index := attr.Type
 		index := b.shader.getAttrib(attr.Name)

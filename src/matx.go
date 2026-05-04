@@ -95,14 +95,16 @@ func (m *Matrix4) SetScale3(p Vec3) {
 	m[10] = p.Z
 }
 func (m *Matrix4) Scale1(k float32) {
-	m[0] *= k
-	m[5] *= k
-	m[10] *= k
+	n := new(Matrix4)
+	n.SetIdentity()
+	n.SetScale1(k)
+	m.MulSelf(n)
 }
 func (m *Matrix4) Scale3(p Vec3) {
-	m[0] *= p.X
-	m[5] *= p.Y
-	m[10] *= p.Z
+	n := new(Matrix4)
+	n.SetIdentity()
+	n.SetScale3(p)
+	m.MulSelf(n)
 }
 func (m *Matrix4) Add(n *Matrix4) *Matrix4 {
 	return &Matrix4{
