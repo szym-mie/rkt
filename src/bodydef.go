@@ -5,9 +5,8 @@ import (
 )
 
 type BodyDef struct {
-	InertiaCoeff Vec3       `json:"inertia"`
-	Tapers       []TaperDef `json:"tapers"`
-	Planes       []PlaneDef `json:"planes"`
+	InertiaCoeff Vec3     `json:"inertia"`
+	GeomDefs     []string `json:"geoms"`
 }
 
 // TODO: merge bodyDef with colliders and calcluate axis inertia from defs

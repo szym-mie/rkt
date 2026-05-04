@@ -163,10 +163,10 @@ func main() {
 	// p = mainVehicle.AttachBelow(p, rkt.NewPart("base/decoup10"))
 	// mainVehicle.AddStage()
 	// p = mainVehicle.AttachBelow(p, rkt.NewPart("base/solid102"))
-	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/decoup10"))
-	mainVehicle.AddStage()
-	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/adapt1015"))
-	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/solid153"))
+	// p = mainVehicle.AttachBelow(p, rkt.NewPart("base/decoup10"))
+	// mainVehicle.AddStage()
+	// p = mainVehicle.AttachBelow(p, rkt.NewPart("base/adapt1015"))
+	// p = mainVehicle.AttachBelow(p, rkt.NewPart("base/solid153"))
 	mainVehicle.Link()
 
 	camera.Target = mainVehicle

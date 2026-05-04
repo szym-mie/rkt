@@ -104,9 +104,10 @@ func (g *Geom1) draw(m *Matrix4) {
 	uPMatrix := g.Shader.getUniform("u_PMatrix")
 	uVMatrix := g.Shader.getUniform("u_VMatrix")
 	uMMatrix := g.Shader.getUniform("u_MMatrix")
+	// TODO: source light from somewhere else
 	dirLightDir := []float32{0.7, 0.3, 0.5, 0.0, 0.0, -1.0}
-	dirLightColor := []float32{1.0, 0.5, 0.3, 0.0, 0.25, 0.5}
-	gl.Uniform3f(uAmbLightColor, 0.0, 0.1, 0.2)
+	dirLightColor := []float32{0.9, 0.9, 1.0, 0.0, 0.2, 0.3}
+	gl.Uniform3f(uAmbLightColor, 0.4, 0.4, 0.5)
 	gl.Uniform3fv(uDirLightDir, 2, &dirLightDir[0])
 	gl.Uniform3fv(uDirLightColor, 2, &dirLightColor[0])
 	g.Texture.uniform(uDiffTexture, 0)

@@ -121,23 +121,20 @@ func (d *PartDef) createChute() *PartChute {
 	p.IsActive = false
 	p.IsDead = false
 	p.IsUsed = false
-	p.ChuteGeom = geom1DefMap["base/geom/chute0"].create()
+	p.ChuteGeom = geom1DefMap["base/geom/chute"].create()
 	return p
 }
-func (d *PartDef) buildGeom() []Geom1 {
-	taperLen := len(d.Body.Tapers)
-	geomLen := taperLen + len(d.Body.Planes)
-	geom := make([]Geom1, geomLen)
-	log.Printf("build_geom: %s - %d tapers %d planes",
-		d.Name, taperLen, len(d.Body.Planes))
-	for i, taper := range d.Body.Tapers {
-		geom[i] = *taper.buildGeom()
+func (d *PartDef) buildGeom() []*Geom1 {
+	geomsCnt := len(d.Body.GeomDefs)
+	geoms := make([]*Geom1, geomsCnt)
+	log.Printf("build_geom: %s - %d geoms", d.Name, geomsCnt)
+	for i, name := range d.Body.GeomDefs {
+		def, ok := geom1DefMap[name]
+		if !ok {
+			log.Fatalf("build_geom: no such geom1def %s\n", name)
+		}
+		geoms[i] = def.create()
 	}
 
-	for i, plane := range d.Body.Planes {
-		j := taperLen + i
-		geom[j] = *plane.buildGeom()
-	}
-
-	return geom
+	return geoms
 }

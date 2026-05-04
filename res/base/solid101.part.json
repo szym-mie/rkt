@@ -10,22 +10,11 @@
     },
     "body": {
         "inertia": [0.60, 0.60, 0.50],
-        "tapers": [{
-            "texture": "base/part/solida",
-            "rings": 16,
-            "upper": { "offset": 1.0, "radius": 1.0 },
-            "lower": { "offset": -1.0, "radius": 1.0 }
-        }, {
-            "texture": "base/part/nozzlea",
-            "rings": 16,
-            "upper": { "offset": -1.0, "radius": 0.6 },
-            "lower": { "offset": -1.6, "radius": 0.8 }
-        }],
-        "planes": []
+        "geoms": ["base/geom/solid101"]
     },
     "attach": {
         "upper": [0.0, 0.0, 1.0],
-        "lower": [0.0, 0.0, -1.6]
+        "lower": [0.0, 0.0, -1.0]
     },
     "engine": {
         "fuel": {

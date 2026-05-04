@@ -5,8 +5,8 @@ var drawDiamondGeom *Geom1
 var lineColor Vec3
 
 func InitDraw() {
-	drawVectorGeom = geom1DefMap["base/geom/drawvector"].create()
-	drawDiamondGeom = geom1DefMap["base/geom/drawdiamond"].create()
+	// drawVectorGeom = geom1DefMap["base/geom/drawvector"].create()
+	// drawDiamondGeom = geom1DefMap["base/geom/drawdiamond"].create()
 }
 
 func SetLineColor(r, g, b float32) {

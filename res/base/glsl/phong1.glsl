@@ -15,7 +15,7 @@ uniform mat4 u_MMatrix;
 
 void main() {
     gl_Position = u_PMatrix * u_VMatrix * u_MMatrix * vec4(a_Pos, 1.0);
-    v_Norm = a_Norm;
+    v_Norm = mat3(u_MMatrix) * a_Norm;
     v_FragPos = vec3(u_MMatrix * vec4(a_Pos, 1.0));
     v_UV0 = a_UV0;
 }
