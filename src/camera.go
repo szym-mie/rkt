@@ -7,7 +7,7 @@ import (
 )
 
 type Camera struct {
-	PVMatrixPair
+	PVMatrix
 	Target       *Vehicle
 	FocusPos     Vec3
 	lastMousePos Vec2

@@ -156,7 +156,7 @@ func LoadPkg(filename string) uint {
 			log.Printf("+shader %s", name)
 			shaderMap[name] = loadShader(fp)
 		case "bml":
-			log.Printf("+bml %s", name)
+			log.Printf("+bmlgeom %s", name)
 			geom1Def, geom2Def := loadBMLGeom(fp)
 			if geom1Def != nil {
 				geom1DefMap[name] = geom1Def

@@ -148,6 +148,14 @@ func main() {
 	camera.SetViewport(w, h)
 	camera.CaptureMouse(window)
 
+	rkt.ActiveLightEnv.AmbColor = rkt.Vec3{X: 0.4, Y: 0.4, Z: 0.5}
+	rkt.ActiveLightEnv.DirLights[0] = rkt.DirLight{
+		Dir:   rkt.Vec3{X: 0.7, Y: 0.3, Z: 0.5},
+		Color: rkt.Vec3{X: 0.9, Y: 0.9, Z: 1.0}}
+	rkt.ActiveLightEnv.DirLights[1] = rkt.DirLight{
+		Dir:   rkt.Vec3{X: 0.0, Y: 0.0, Z: -1.0},
+		Color: rkt.Vec3{X: 0.0, Y: 0.2, Z: 0.3}}
+
 	radius = 10.0
 
 	mainVehicle = rkt.NewVehicle("test", rkt.NewPart("base/pod10"))
@@ -188,7 +196,7 @@ func main() {
 		mousePos := rkt.Vec2{X: float32(x), Y: float32(y)}
 		camera.SetProjection()
 		camera.Update(mousePos)
-		rkt.ActivePV = &camera.PVMatrixPair
+		rkt.ActivePV = &camera.PVMatrix
 
 		dt := time.Millisecond * 25
 
@@ -204,7 +212,7 @@ func main() {
 			}
 		}
 
-		rkt.ActivePV = &hud.PVMatrixPair
+		rkt.ActivePV = &hud.PVMatrix
 		hud.Draw(mainVehicle.Rot)
 
 		time.Sleep(dt)

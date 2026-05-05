@@ -29,7 +29,7 @@ in vec3 v_FragPos;
 in vec3 v_Norm;
 in vec2 v_UV0;
 
-uniform sampler2D u_DiffTexture;
+uniform sampler2D u_Texture;
 uniform vec3 u_AmbLightColor;
 uniform vec3 u_DirLightDir[2];
 uniform vec3 u_DirLightColor[2];
@@ -39,27 +39,30 @@ uniform vec3 u_PtLightColor[8];
 uniform vec3 u_PtLightPower[8];
 */
 
-vec3 calcDirLight(vec3 dir, vec3 color, vec3 norm) {
+vec3 calcDirLight(vec3 dir, vec3 color, vec3 norm, vec3 texl) {
     float diff = max(dot(dir, norm), 0.0);
-    vec3 diffuse = color * diff * vec3(texture(u_DiffTexture, v_UV0));
+    vec3 diffuse = color * diff * texl;
     return diffuse;
 }
 
-vec3 calcPtLight(vec3 pos, vec3 color, float linFall, float quaFall, vec3 norm) {
+vec3 calcPtLight(vec3 pos, vec3 color, vec3 power, vec3 norm, vec3 texl) {
     vec3 dir = normalize(pos - v_FragPos);
     float diff = max(dot(dir, norm), 0.0);
     float dist = length(pos - v_FragPos);
-    float atten = 1.0 / (1.0 + linFall * dist + quaFall * (dist * dist));
-    vec3 diffuse = color * diff * vec3(texture(u_DiffTexture, v_UV0));
-    diffuse *= atten;
+    float attenInv = power.x;
+    attenInv += power.y * dist;
+    attenInv += power.z * dist * dist;
+    vec3 diffuse = color * diff * texl;
+    diffuse /= attenInv;
     return diffuse;
 }
 
 void main() {
+    vec3 texl = texture(u_Texture, v_UV0).rgb;
     vec3 norm = normalize(v_Norm);
-    vec3 color = u_AmbLightColor * vec3(texture(u_DiffTexture, v_UV0));
+    vec3 color = u_AmbLightColor * texl;
     for (int i = 0; i < 2; i++) {
-        color += calcDirLight(u_DirLightDir[i], u_DirLightColor[i], norm);
+        color += calcDirLight(u_DirLightDir[i], u_DirLightColor[i], norm, texl);
     }
     f_Color = vec4(color, 1.0);
 }

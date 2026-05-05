@@ -3,6 +3,8 @@ package rkt
 import (
 	"encoding/json"
 	"math"
+
+	"github.com/go-gl/gl/v3.3-core/gl"
 )
 
 type VecAxis uint
@@ -66,10 +68,6 @@ func (v Vec3) Len() float32 {
 func (v Vec3) AxisLenSq() Vec3 {
 	x, y, z := v.X*v.X, v.Y*v.Y, v.Z*v.Z
 	return Vec3{y + z, x + z, x + y}
-}
-func (v Vec3) Apply() {
-	panic("wypierdalaccccc")
-	// gl.Translatef(v.X, v.Y, v.Z)
 }
 func (v Vec3) Add(u Vec3) Vec3 {
 	return Vec3{v.X + u.X, v.Y + u.Y, v.Z + u.Z}
@@ -139,6 +137,12 @@ func (v Vec3) Ortho() Vec3 {
 	}
 
 	return v.Cross(other)
+}
+func (v Vec3) uniform(location int32) {
+	gl.Uniform3f(location, v.X, v.Y, v.Z)
+}
+func uniformVecArray3(vs []Vec3, location int32) {
+	gl.Uniform3fv(location, int32(len(vs)), &vs[0].X)
 }
 
 type Vec4 struct {

@@ -8,7 +8,7 @@ import (
 )
 
 type Hud struct {
-	PVMatrixPair
+	PVMatrix
 	width  uint16
 	height uint16
 	adi    *Adi

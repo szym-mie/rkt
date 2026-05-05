@@ -2,8 +2,6 @@ package rkt
 
 import (
 	"log"
-
-	"github.com/go-gl/gl/v3.3-core/gl"
 )
 
 type Geom1Def struct {
@@ -48,19 +46,15 @@ func (g *Geom1) clone() *Geom1 {
 func (g *Geom1) draw(m *Matrix4) {
 	g.Shader.active()
 	g.Texture.bind()
-	uDiffTexture := g.Shader.getUniform("u_DiffTexture")
+	uDiffTexture := g.Shader.getUniform("u_Texture")
 	uAmbLightColor := g.Shader.getUniform("u_AmbLightColor")
 	uDirLightDir := g.Shader.getUniform("u_DirLightDir")
 	uDirLightColor := g.Shader.getUniform("u_DirLightColor")
 	uPMatrix := g.Shader.getUniform("u_PMatrix")
 	uVMatrix := g.Shader.getUniform("u_VMatrix")
 	uMMatrix := g.Shader.getUniform("u_MMatrix")
-	// TODO: source light from somewhere else
-	dirLightDir := []float32{0.7, 0.3, 0.5, 0.0, 0.0, -1.0}
-	dirLightColor := []float32{0.9, 0.9, 1.0, 0.0, 0.2, 0.3}
-	gl.Uniform3f(uAmbLightColor, 0.4, 0.4, 0.5)
-	gl.Uniform3fv(uDirLightDir, 2, &dirLightDir[0])
-	gl.Uniform3fv(uDirLightColor, 2, &dirLightColor[0])
+
+	ActiveLightEnv.uniform(uAmbLightColor, uDirLightDir, uDirLightColor)
 	g.Texture.uniform(uDiffTexture, 0)
 	ActivePV.ProjMatrix.uniform(uPMatrix)
 	ActivePV.ViewMatrix.uniform(uVMatrix)
@@ -132,22 +126,17 @@ func (g *Geom2) draw(m *Matrix4) {
 	g.Texture0.bindTo(0)
 	g.Texture1.bindTo(1)
 	g.Texture1.bindTo(2)
-	// TODO: use less descriptive texture names in shaders
-	uDiffTexture0 := g.Shader.getUniform("u_DiffTexture0")
-	uDiffTexture1 := g.Shader.getUniform("u_DiffTexture1")
-	uNormTexture := g.Shader.getUniform("u_NormTexture")
+	uDiffTexture0 := g.Shader.getUniform("u_Texture0")
+	uDiffTexture1 := g.Shader.getUniform("u_Texture1")
+	uNormTexture := g.Shader.getUniform("u_Texture2")
 	uAmbLightColor := g.Shader.getUniform("u_AmbLightColor")
 	uDirLightDir := g.Shader.getUniform("u_DirLightDir")
 	uDirLightColor := g.Shader.getUniform("u_DirLightColor")
 	uPMatrix := g.Shader.getUniform("u_PMatrix")
 	uVMatrix := g.Shader.getUniform("u_VMatrix")
 	uMMatrix := g.Shader.getUniform("u_MMatrix")
-	// TODO: source light from somewhere else
-	dirLightDir := []float32{0.7, 0.3, 0.5, 0.0, 0.0, -1.0}
-	dirLightColor := []float32{0.9, 0.9, 1.0, 0.0, 0.2, 0.3}
-	gl.Uniform3f(uAmbLightColor, 0.4, 0.4, 0.5)
-	gl.Uniform3fv(uDirLightDir, 2, &dirLightDir[0])
-	gl.Uniform3fv(uDirLightColor, 2, &dirLightColor[0])
+
+	ActiveLightEnv.uniform(uAmbLightColor, uDirLightDir, uDirLightColor)
 	g.Texture0.uniform(uDiffTexture0, 0)
 	g.Texture1.uniform(uDiffTexture1, 1)
 	g.Texture2.uniform(uNormTexture, 2)

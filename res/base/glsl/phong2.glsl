@@ -40,43 +40,46 @@ in vec3 v_Norm;
 in vec2 v_UV0;
 in mat3 v_TBNMatrix;
 
-uniform sampler2D u_DiffTexture0;
-uniform sampler2D u_DiffTexture1;
-uniform sampler2D u_NormTexture;
+uniform sampler2D u_Texture0;
+uniform sampler2D u_Texture1;
+uniform sampler2D u_Texture2;
 uniform vec3 u_AmbLightColor;
 uniform vec3 u_DirLightDir[2];
 uniform vec3 u_DirLightColor[2];
 /*
 uniform vec3 u_PtLightPos[8];
 uniform vec3 u_PtLightColor[8];
-uniform float u_PtLightPower[8];
+uniform vec3 u_PtLightPower[8];
 */
-vec3 calcDirLight(vec3 dir, vec3 color, vec3 norm, vec3 tex0, vec3 tex1) {
+vec3 calcDirLight(vec3 dir, vec3 color, vec3 norm, vec3 texl) {
     float diff = max(dot(dir, norm), 0.0);
-    vec3 diffuse = color * diff * tex0 * tex1;
+    vec3 diffuse = color * diff * texl;
     return diffuse;
 }
 
-vec3 calcPtLight(vec3 pos, vec3 color, float linFall, float quaFall, vec3 norm, vec3 tex0, vec3 tex1) {
+vec3 calcPtLight(vec3 pos, vec3 color, vec3 power, vec3 norm, vec3 texl) {
     vec3 dir = normalize(pos - v_FragPos);
     float diff = max(dot(dir, norm), 0.0);
     float dist = length(pos - v_FragPos);
-    float atten = 1.0 / (1.0 + linFall * dist + quaFall * (dist * dist));
-    vec3 diffuse = color * diff * tex0 * tex1;
-    diffuse *= atten;
+    float attenInv = power.x;
+    attenInv += power.y * dist;
+    attenInv += power.z * dist * dist;
+    vec3 diffuse = color * diff * texl;
+    diffuse /= attenInv;
     return diffuse;
 }
 
 void main() {
-    vec3 tex0 = texture(u_DiffTexture0, v_UV0).rgb;
-    vec3 tex1 = texture(u_DiffTexture1, v_UV0 * UV1_SCALE).rgb;
-    vec3 nmap = texture(u_NormTexture, v_UV0 * UV1_SCALE).rgb;
+    vec3 tex0 = texture(u_Texture0, v_UV0).rgb;
+    vec3 tex1 = texture(u_Texture1, v_UV0 * UV1_SCALE).rgb;
+    vec3 texl = tex0 * tex1;
+    vec3 nmap = texture(u_Texture2, v_UV0 * UV1_SCALE).rgb;
     nmap = normalize(nmap * 2.0 - 1.0);
     nmap = normalize(v_TBNMatrix * nmap);
 
-    vec3 color = u_AmbLightColor * tex0 * tex1;
+    vec3 color = u_AmbLightColor * texl;
     for (int i = 0; i < 2; i++) {
-        color += calcDirLight(u_DirLightDir[i], u_DirLightColor[i], nmap, tex0, tex1);
+        color += calcDirLight(u_DirLightDir[i], u_DirLightColor[i], nmap, texl);
     }
     f_Color = vec4(color, 1.0);
 }
