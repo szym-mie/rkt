@@ -95,12 +95,13 @@ func loadBMLGeom(r io.Reader) (*Geom1Def, *Geom2Def) {
 		}
 		def1.RawArray = bml.Buffer
 		return def1, nil
-	case 3:
+	case 4:
 		def2 := new(Geom2Def)
 		def2.ShaderName = shaderName
 		def2.Texture0Name = textureNames[0]
 		def2.Texture1Name = textureNames[1]
 		def2.Texture2Name = textureNames[2]
+		def2.Texture3Name = textureNames[3]
 		def2.BufferAttrs = make([]BufferAttr, bufferAttrCnt)
 		for i, bmlAttrib := range bml.Header.Attribs {
 			def2.BufferAttrs[i].Type = BufferAttrType(bmlAttrib.Bindp)

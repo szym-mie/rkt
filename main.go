@@ -138,6 +138,7 @@ func main() {
 	rkt.InitTextureUnit(0)
 	rkt.InitTextureUnit(1)
 	rkt.InitTextureUnit(2)
+	rkt.InitTextureUnit(3)
 
 	rkt.LoadPkg("res/base.zip")
 
@@ -154,7 +155,7 @@ func main() {
 		Color: rkt.Vec3{X: 0.9, Y: 0.9, Z: 1.0}}
 	rkt.ActiveLightEnv.DirLights[1] = rkt.DirLight{
 		Dir:   rkt.Vec3{X: 0.0, Y: 0.0, Z: -1.0},
-		Color: rkt.Vec3{X: 0.0, Y: 0.2, Z: 0.3}}
+		Color: rkt.Vec3{X: 0.0, Y: 0.1, Z: 0.1}}
 
 	radius = 10.0
 

@@ -46,7 +46,7 @@ func (g *Geom1) clone() *Geom1 {
 func (g *Geom1) draw(m *Matrix4) {
 	g.Shader.active()
 	g.Texture.bind()
-	uDiffTexture := g.Shader.getUniform("u_Texture")
+	uTexture := g.Shader.getUniform("u_Texture")
 	uAmbLightColor := g.Shader.getUniform("u_AmbLightColor")
 	uDirLightDir := g.Shader.getUniform("u_DirLightDir")
 	uDirLightColor := g.Shader.getUniform("u_DirLightColor")
@@ -55,7 +55,7 @@ func (g *Geom1) draw(m *Matrix4) {
 	uMMatrix := g.Shader.getUniform("u_MMatrix")
 
 	ActiveLightEnv.uniform(uAmbLightColor, uDirLightDir, uDirLightColor)
-	g.Texture.uniform(uDiffTexture, 0)
+	g.Texture.uniform(uTexture, 0)
 	ActivePV.ProjMatrix.uniform(uPMatrix)
 	ActivePV.ViewMatrix.uniform(uVMatrix)
 	m.uniform(uMMatrix)
@@ -68,6 +68,7 @@ type Geom2Def struct {
 	Texture0Name string
 	Texture1Name string
 	Texture2Name string
+	Texture3Name string
 	BufferAttrs  []BufferAttr
 	RawArray     []float32
 }
@@ -94,10 +95,16 @@ func (d *Geom2Def) create() *Geom2 {
 		log.Fatalf("create: no such texture %s", d.Texture2Name)
 	}
 
+	texture3, ok := textureMap[d.Texture3Name]
+	if !ok {
+		log.Fatalf("create: no such texture %s", d.Texture3Name)
+	}
+
 	g.Shader = shader
 	g.Texture0 = texture0
 	g.Texture1 = texture1
 	g.Texture2 = texture2
+	g.Texture3 = texture3
 	g.Buffer = NewBuffer(shader, d.BufferAttrs)
 	g.Buffer.data(d.RawArray)
 	return g
@@ -109,6 +116,7 @@ type Geom2 struct {
 	Texture0 Texture
 	Texture1 Texture
 	Texture2 Texture
+	Texture3 Texture
 	Buffer   *Buffer
 }
 
@@ -118,6 +126,7 @@ func (g *Geom2) clone() *Geom2 {
 	n.Texture0 = g.Texture0
 	n.Texture1 = g.Texture1
 	n.Texture2 = g.Texture2
+	n.Texture3 = g.Texture3
 	n.Buffer = g.Buffer
 	return n
 }
@@ -126,9 +135,10 @@ func (g *Geom2) draw(m *Matrix4) {
 	g.Texture0.bindTo(0)
 	g.Texture1.bindTo(1)
 	g.Texture1.bindTo(2)
-	uDiffTexture0 := g.Shader.getUniform("u_Texture0")
-	uDiffTexture1 := g.Shader.getUniform("u_Texture1")
-	uNormTexture := g.Shader.getUniform("u_Texture2")
+	uTexture0 := g.Shader.getUniform("u_Texture0")
+	uTexture1 := g.Shader.getUniform("u_Texture1")
+	uTexture2 := g.Shader.getUniform("u_Texture2")
+	uTexture3 := g.Shader.getUniform("u_Texture3")
 	uAmbLightColor := g.Shader.getUniform("u_AmbLightColor")
 	uDirLightDir := g.Shader.getUniform("u_DirLightDir")
 	uDirLightColor := g.Shader.getUniform("u_DirLightColor")
@@ -137,9 +147,10 @@ func (g *Geom2) draw(m *Matrix4) {
 	uMMatrix := g.Shader.getUniform("u_MMatrix")
 
 	ActiveLightEnv.uniform(uAmbLightColor, uDirLightDir, uDirLightColor)
-	g.Texture0.uniform(uDiffTexture0, 0)
-	g.Texture1.uniform(uDiffTexture1, 1)
-	g.Texture2.uniform(uNormTexture, 2)
+	g.Texture0.uniform(uTexture0, 0)
+	g.Texture1.uniform(uTexture1, 1)
+	g.Texture2.uniform(uTexture2, 2)
+	g.Texture3.uniform(uTexture3, 3)
 	ActivePV.ProjMatrix.uniform(uPMatrix)
 	ActivePV.ViewMatrix.uniform(uVMatrix)
 	m.uniform(uMMatrix)

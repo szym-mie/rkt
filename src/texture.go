@@ -64,7 +64,7 @@ func (b *Bitmap) createTexture() Texture {
 	gl.GenTextures(1, &handle)
 	texture := Texture(handle)
 	texture.bind()
-	texture.setFilter(TextureFilterNearest)
+	texture.setFilter(TextureFilterLinear)
 	texture.setRepeat(true)
 	gl.TexImage2D(
 		gl.TEXTURE_2D,

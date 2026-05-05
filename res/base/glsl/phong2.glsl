@@ -43,6 +43,7 @@ in mat3 v_TBNMatrix;
 uniform sampler2D u_Texture0;
 uniform sampler2D u_Texture1;
 uniform sampler2D u_Texture2;
+uniform sampler2D u_Texture3;
 uniform vec3 u_AmbLightColor;
 uniform vec3 u_DirLightDir[2];
 uniform vec3 u_DirLightColor[2];
@@ -72,10 +73,12 @@ vec3 calcPtLight(vec3 pos, vec3 color, vec3 power, vec3 norm, vec3 texl) {
 void main() {
     vec3 tex0 = texture(u_Texture0, v_UV0).rgb;
     vec3 tex1 = texture(u_Texture1, v_UV0 * UV1_SCALE).rgb;
-    vec3 texl = tex0 * tex1;
     vec3 nmap = texture(u_Texture2, v_UV0 * UV1_SCALE).rgb;
+    vec3 umap = texture(u_Texture3, v_UV0).rgb;
+    vec3 texl = tex0 * tex1;
+    vec3 up = vec3(0.0, 0.0, 1.0);
     nmap = normalize(nmap * 2.0 - 1.0);
-    nmap = normalize(v_TBNMatrix * nmap);
+    nmap = normalize(v_TBNMatrix * mix(up, nmap, umap.r));
 
     vec3 color = u_AmbLightColor * texl;
     for (int i = 0; i < 2; i++) {
