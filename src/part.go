@@ -3,12 +3,10 @@ package rkt
 import (
 	"log"
 	"time"
-
-	"github.com/go-gl/gl/v2.1/gl"
 )
 
 type Part interface {
-	draw(offset *Vec3)
+	draw(model *Matrix4, offset *Vec3)
 	update(v *Vehicle, n *PartNode, dt float32)
 	getMass() float32
 	getInertiaCoeff() Vec3
@@ -29,7 +27,7 @@ func NewPart(name string) Part {
 
 type PartBase struct {
 	Def              *PartDef
-	Geom             []Geom1
+	Geom             []*Geom1
 	IsActive, IsDead bool
 }
 
@@ -39,10 +37,9 @@ func (p *PartBase) getAttachPts() (Vec3, Vec3) {
 func (p *PartBase) GetName() string {
 	return p.Def.Name
 }
-func (p *PartBase) drawModel(offset *Vec3) {
-	offset.Apply()
+func (p *PartBase) drawModel(model *Matrix4) {
 	for _, g := range p.Geom {
-		g.draw()
+		g.draw(model)
 	}
 }
 func (p *PartBase) drawAttachPts() {
@@ -76,11 +73,9 @@ type PartHull struct {
 	PartBase
 }
 
-func (p *PartHull) draw(offset *Vec3) {
-	gl.MatrixMode(gl.MODELVIEW)
-	gl.PushMatrix()
-	p.drawModel(offset)
-	gl.PopMatrix()
+func (p *PartHull) draw(model *Matrix4, offset *Vec3) {
+	modelOffset := NewMatrix4Pos(*offset)
+	p.drawModel(model.Mul(modelOffset))
 }
 func (p *PartHull) update(v *Vehicle, n *PartNode, dt float32) {
 	applyDrag(v, n, dt)
@@ -90,11 +85,9 @@ type PartCtrl struct {
 	PartBase
 }
 
-func (p *PartCtrl) draw(offset *Vec3) {
-	gl.MatrixMode(gl.MODELVIEW)
-	gl.PushMatrix()
-	p.drawModel(offset)
-	gl.PopMatrix()
+func (p *PartCtrl) draw(model *Matrix4, offset *Vec3) {
+	modelOffset := NewMatrix4Pos(*offset)
+	p.drawModel(model.Mul(modelOffset))
 }
 func (p *PartCtrl) update(v *Vehicle, n *PartNode, dt float32) {
 	applyDrag(v, n, dt)
@@ -105,11 +98,9 @@ type PartDecoup struct {
 	IsUsed bool
 }
 
-func (p *PartDecoup) draw(offset *Vec3) {
-	gl.MatrixMode(gl.MODELVIEW)
-	gl.PushMatrix()
-	p.drawModel(offset)
-	gl.PopMatrix()
+func (p *PartDecoup) draw(model *Matrix4, offset *Vec3) {
+	modelOffset := NewMatrix4Pos(*offset)
+	p.drawModel(model.Mul(modelOffset))
 }
 func (p *PartDecoup) update(v *Vehicle, n *PartNode, dt float32) {
 	applyDrag(v, n, dt)
@@ -134,15 +125,11 @@ type PartEngine struct {
 	FuelMass float32
 }
 
-func (p *PartEngine) draw(offset *Vec3) {
-	gl.MatrixMode(gl.MODELVIEW)
-	gl.PushMatrix()
-	p.drawModel(offset)
-	if p.IsActive && p.FuelMass > 0.0 {
-		p.Plume.draw()
-	}
-
-	gl.PopMatrix()
+func (p *PartEngine) draw(model *Matrix4, offset *Vec3) {
+	modelOffset := NewMatrix4Pos(*offset)
+	local := model.Mul(modelOffset)
+	p.drawModel(local)
+	p.Plume.draw(*local)
 }
 func (p *PartEngine) update(v *Vehicle, n *PartNode, dt float32) {
 	applyDrag(v, n, dt)
@@ -150,6 +137,7 @@ func (p *PartEngine) update(v *Vehicle, n *PartNode, dt float32) {
 	e := p.Def.Engine
 	if p.IsActive {
 		p.FuelFlow = e.FuelDef.Flow
+		// TODO: better FX
 	} else if e.CanShutdown {
 		p.FuelFlow = 0.0
 	}
@@ -161,12 +149,17 @@ func (p *PartEngine) update(v *Vehicle, n *PartNode, dt float32) {
 		v.Vel = v.Vel.Add(v.Rot.Rotate(forceVec).MulSca(1 / v.Mass))
 		fuelCons := p.FuelFlow * dt
 		p.FuelMass -= min(fuelCons, p.FuelMass)
-		p.Plume.update(dt)
 	} else {
 		// engine shutdown
 		p.FuelFlow = 0.0
 		p.FuelMass = 0.0
 	}
+
+	if p.IsActive && p.FuelMass > 0.0 {
+		p.Plume.emit(v.Pos, v.Vel, n.Offset, v.Rot)
+	}
+
+	p.Plume.update(dt)
 }
 func (p *PartEngine) getMass() float32 {
 	return p.Def.Mass + p.FuelMass
@@ -184,20 +177,18 @@ type PartChute struct {
 	Radius       float32
 }
 
-func (p *PartChute) draw(offset *Vec3) {
-	gl.MatrixMode(gl.MODELVIEW)
-	gl.PushMatrix()
-	p.drawModel(offset)
+func (p *PartChute) draw(model *Matrix4, offset *Vec3) {
+	modelOffset := NewMatrix4Pos(*offset)
+	local := model.Mul(modelOffset)
+	p.drawModel(local)
 	r := p.Radius
 	h := p.Height
 	p.ChuteAntiRot.Apply()
 	p.ChuteRot.Conj().Apply()
-	gl.Scalef(r, r, h)
+	local.Scale3(Vec3{r, r, h})
 	if p.IsActive && !p.IsCut {
-		p.ChuteGeom.draw()
+		p.ChuteGeom.draw(local)
 	}
-
-	gl.PopMatrix()
 }
 func (p *PartChute) update(v *Vehicle, n *PartNode, dt float32) {
 	applyDrag(v, n, dt)
@@ -207,7 +198,7 @@ func (p *PartChute) update(v *Vehicle, n *PartNode, dt float32) {
 		p.ChuteAntiRot = v.Rot.Conj()
 		p.ChuteRot = NewVecDiffQuat(v.Vel, Vec3{0, 0, -1}).Norm()
 		if p.IsUsed {
-			p.DeployTime = Min(p.DeployTime+dt, c.DeployTime)
+			p.DeployTime = Minf(p.DeployTime+dt, c.DeployTime)
 		} else {
 			p.DeployTime = 0
 			p.IsUsed = true
@@ -249,10 +240,10 @@ type PartWing struct {
 }
 
 func (p *PartWing) draw(offset *Vec3) {
-	gl.MatrixMode(gl.MODELVIEW)
-	gl.PushMatrix()
-	p.drawModel(offset)
-	gl.PopMatrix()
+	// gl.MatrixMode(gl.MODELVIEW)
+	// gl.PushMatrix()
+	// p.drawModel(offset)
+	// gl.PopMatrix()
 }
 func (p *PartWing) update(v *Vehicle, n *PartNode, dt time.Duration) {
 	// TODO: no aerodynamics yet

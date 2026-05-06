@@ -8,7 +8,7 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 
-	"github.com/go-gl/gl/v2.1/gl"
+	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 	rkt "szymm.org/rkt/src"
 )
@@ -28,7 +28,8 @@ const (
 var pause bool
 var focusIndex uint
 var mainVehicle *rkt.Vehicle
-var radius float32
+var speedup int8 = 4
+var radius float32 = 10
 
 const ctrlSpeed = 0.4
 
@@ -75,6 +76,14 @@ func onKey(w *glfw.Window, key glfw.Key, sc int, act glfw.Action, mods glfw.Modi
 			mainVehicle.Ang = mainVehicle.Ang.Add(mainVehicle.Rot.Rotate(ctrlVector(rkt.ZAxis, +ctrlSpeed*10)))
 		case glfw.KeyF2:
 			focusIndex = (focusIndex + 1) % rkt.VehiclesIndex
+		case glfw.KeyComma:
+			if speedup > 1 {
+				speedup /= 2
+			}
+		case glfw.KeyPeriod:
+			if speedup < 32 {
+				speedup *= 2
+			}
 		}
 	}
 }
@@ -112,15 +121,27 @@ func main() {
 	gl.DepthFunc(gl.LESS)
 	gl.ClearDepth(1.0)
 
-	fog := [4]float32{0.2, 0.7, 0.8, 0.0}
-	gl.Enable(gl.FOG)
-	gl.Fogi(gl.FOG_MODE, gl.LINEAR)
-	gl.Fogi(gl.FOG_COORD_SRC, gl.FRAGMENT_DEPTH)
-	gl.Fogfv(gl.FOG_COLOR, &fog[0])
-	gl.Fogf(gl.FOG_DENSITY, 0.05)
-	gl.Hint(gl.FOG_HINT, gl.NICEST)
-	gl.Fogf(gl.FOG_START, 1.0)
-	gl.Fogf(gl.FOG_END, 5000.0)
+	gl.Enable(gl.PROGRAM_POINT_SIZE)
+
+	// fog := [4]float32{0.2, 0.7, 0.8, 0.0}
+	// gl.Enable(gl.FOG)
+	// gl.Fogi(gl.FOG_MODE, gl.LINEAR)
+	// gl.Fogi(gl.FOG_COORD_SRC, gl.FRAGMENT_DEPTH)
+	// gl.Fogfv(gl.FOG_COLOR, &fog[0])
+	// gl.Fogf(gl.FOG_DENSITY, 0.05)
+	// gl.Hint(gl.FOG_HINT, gl.NICEST)
+	// gl.Fogf(gl.FOG_START, 1.0)
+	// gl.Fogf(gl.FOG_END, 5000.0)
+
+	// fp, _ := os.Open("bmlcube.bml")
+	// bml, err := rkt.ReadBML(fp)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// } else {
+	// 	log.Println(bml.Header.ElemCount)
+	// 	log.Println(bml.Header.Externs)
+	// 	log.Println(bml.Header.Attribs)
+	// }
 
 	gl.Enable(gl.BLEND)
 	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
@@ -128,15 +149,26 @@ func main() {
 	rkt.InitTextureUnit(0)
 	rkt.InitTextureUnit(1)
 	rkt.InitTextureUnit(2)
+	rkt.InitTextureUnit(3)
 
 	rkt.LoadPkg("res/base.zip")
+
+	sky := rkt.NewSky()
 
 	hud := rkt.NewHud()
 	hud.SetViewport(w, h)
 
-	camera := rkt.NewCamera(1.0, 8000.0, 100.0)
+	camera := rkt.NewCamera(1.0, 8000.0, 10.0)
 	camera.SetViewport(w, h)
 	camera.CaptureMouse(window)
+
+	rkt.ActiveLightEnv.AmbColor = rkt.Vec3{X: 0.4, Y: 0.4, Z: 0.5}
+	rkt.ActiveLightEnv.DirLights[0] = rkt.DirLight{
+		Dir:   rkt.Vec3{X: 0.7, Y: 0.3, Z: 0.5},
+		Color: rkt.Vec3{X: 0.9, Y: 0.9, Z: 1.0}}
+	rkt.ActiveLightEnv.DirLights[1] = rkt.DirLight{
+		Dir:   rkt.Vec3{X: 0.0, Y: 0.0, Z: -1.0},
+		Color: rkt.Vec3{X: 0.0, Y: 0.1, Z: 0.1}}
 
 	radius = 10.0
 
@@ -153,18 +185,18 @@ func main() {
 	// p = mainVehicle.AttachBelow(p, rkt.NewPart("base/decoup10"))
 	// mainVehicle.AddStage()
 	// p = mainVehicle.AttachBelow(p, rkt.NewPart("base/solid102"))
-	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/decoup10"))
-	mainVehicle.AddStage()
-	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/adapt1015"))
-	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/solid153"))
+	// p = mainVehicle.AttachBelow(p, rkt.NewPart("base/decoup10"))
+	// mainVehicle.AddStage()
+	// p = mainVehicle.AttachBelow(p, rkt.NewPart("base/adapt1015"))
+	// p = mainVehicle.AttachBelow(p, rkt.NewPart("base/solid153"))
 	mainVehicle.Link()
 
 	camera.Target = mainVehicle
 
 	patch00 := rkt.NewPatch("base/patch/00")
 	patch00.Scale = 1600.0
-	patchInf := rkt.NewPatch("base/patch/inf")
-	patchInf.Scale = 1600.0
+	// patchInf := rkt.NewPatch("base/patch/inf")
+	// patchInf.Scale = 1600.0
 
 	rkt.InitDraw()
 	rkt.SetLineColor(1.0, 0.0, 0.0)
@@ -178,22 +210,27 @@ func main() {
 		mousePos := rkt.Vec2{X: float32(x), Y: float32(y)}
 		camera.SetProjection()
 		camera.Update(mousePos)
-		camera.Apply()
+		rkt.ActivePV = &camera.PVMatrix
 
 		dt := time.Millisecond * 25
 
 		patch00.Draw()
-		patchInf.Draw()
+		// patchInf.Draw()
 		for _, v := range rkt.Vehicles {
 			if v == nil {
 				break
 			}
 			v.Draw()
 			if !pause {
-				v.Update(float32(dt.Seconds()))
+				v.Update(float32(dt.Seconds()) * float32(speedup) / 4)
 			}
 		}
 
+		gl.DepthFunc(gl.LEQUAL)
+		sky.Draw()
+		gl.DepthFunc(gl.LESS)
+
+		rkt.ActivePV = &hud.PVMatrix
 		hud.Draw(mainVehicle.Rot)
 
 		time.Sleep(dt)

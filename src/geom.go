@@ -1,172 +1,120 @@
 package rkt
 
-import (
-	"log"
-
-	"github.com/go-gl/gl/v2.1/gl"
-)
-
 type Geom1Def struct {
-	TextureName string `json:"texture"`
-	Vertices    []Vec3 `json:"vertex"`
-	TexCoords   []Vec2 `json:"texcoord"`
+	ShaderName  string
+	TextureName string
+	BufferAttrs []BufferAttr
+	Array       []float32
 }
 
 func (d *Geom1Def) create() *Geom1 {
 	g := new(Geom1)
-	texture, ok := textureMap[d.TextureName]
-	if !ok {
-		log.Fatalf("create: no such texture %s", d.TextureName)
-	}
-
-	count := len(d.Vertices)
-	if count != len(d.TexCoords) {
-		log.Fatalf("create: vertices and texcoords lens mismatch")
-	}
-
-	g.Texture = texture
-	g.Vertices = make([]Vec3, count)
-	g.TexCoords = make([]Vec2, count)
-	copy(g.Vertices, d.Vertices)
-	copy(g.TexCoords, d.TexCoords)
-	g.Count = count
+	g.Shader = getShader(d.ShaderName)
+	g.Texture = getTexture(d.TextureName)
+	g.Buffer = NewBuffer(g.Shader, d.BufferAttrs)
+	g.Buffer.arrayFloat(d.Array)
 	return g
 }
 
 type Geom1 struct {
-	Texture   Texture
-	Vertices  []Vec3
-	TexCoords []Vec2
-	Count     int
-}
-
-func NewGeom1(texture Texture, triCount int) *Geom1 {
-	g := new(Geom1)
-	g.Texture = texture
-	g.Count = triCount * 3
-	g.Vertices = make([]Vec3, g.Count)
-	g.TexCoords = make([]Vec2, g.Count)
-	return g
+	Shader  Shader
+	Texture Texture
+	Buffer  *Buffer
 }
 
 func (g *Geom1) clone() *Geom1 {
 	n := new(Geom1)
+	n.Shader = g.Shader
 	n.Texture = g.Texture
-	n.Count = g.Count
-	n.Vertices = make([]Vec3, g.Count)
-	n.TexCoords = make([]Vec2, g.Count)
-	copy(g.Vertices, n.Vertices)
-	copy(g.TexCoords, n.TexCoords)
+	n.Buffer = g.Buffer
 	return n
 }
-func (g *Geom1) draw() {
-	g.Texture.bind()
-	gl.Begin(gl.TRIANGLES)
-	for i := range g.Count {
-		v := g.Vertices[i]
-		t := g.TexCoords[i]
-		gl.TexCoord2f(t.X, t.Y)
-		gl.Vertex3f(v.X, v.Y, v.Z)
-	}
+func (g *Geom1) draw(m *Matrix4) {
+	g.Shader.active()
+	g.Texture.bind2D()
+	uTexture := g.Shader.getUniform("u_Texture")
+	uAmbLightColor := g.Shader.getUniform("u_AmbLightColor")
+	uDirLightDir := g.Shader.getUniform("u_DirLightDir")
+	uDirLightColor := g.Shader.getUniform("u_DirLightColor")
+	uPMatrix := g.Shader.getUniform("u_PMatrix")
+	uVMatrix := g.Shader.getUniform("u_VMatrix")
+	uMMatrix := g.Shader.getUniform("u_MMatrix")
 
-	gl.End()
-}
-func (g *Geom1) drawTexOffset(texCoordOffset Vec2) {
-	g.Texture.bind()
-	gl.Begin(gl.TRIANGLES)
-	for i := range g.Count {
-		v := g.Vertices[i]
-		t := g.TexCoords[i]
-		gl.TexCoord2f(t.X+texCoordOffset.X, t.Y+texCoordOffset.Y)
-		gl.Vertex3f(v.X, v.Y, v.Z)
-	}
-
-	gl.End()
+	ActiveLightEnv.uniform(uAmbLightColor, uDirLightDir, uDirLightColor)
+	g.Texture.uniform(uTexture, 0)
+	ActivePV.ProjMatrix.uniform(uPMatrix)
+	ActivePV.ViewMatrix.uniform(uVMatrix)
+	m.uniform(uMMatrix)
+	g.Buffer.bind()
+	g.Buffer.draw()
 }
 
 type Geom2Def struct {
-	Texture0Name string `json:"texture0"`
-	Texture1Name string `json:"texture1"`
-	Vertices     []Vec3 `json:"vertex"`
-	TexCoords0   []Vec2 `json:"texcoord0"`
-	TexCoords1   []Vec2 `json:"texcoord1"`
-}
-
-func NewGeom2(texture0, texture1 Texture, triCount int) *Geom2 {
-	g := new(Geom2)
-	g.Texture0 = texture0
-	g.Texture1 = texture1
-	g.Count = triCount * 3
-	g.Vertices = make([]Vec3, g.Count)
-	g.TexCoords0 = make([]Vec2, g.Count)
-	g.TexCoords1 = make([]Vec2, g.Count)
-	return g
+	ShaderName   string
+	Texture0Name string
+	Texture1Name string
+	Texture2Name string
+	Texture3Name string
+	BufferAttrs  []BufferAttr
+	Array        []float32
 }
 
 func (d *Geom2Def) create() *Geom2 {
 	g := new(Geom2)
-	texture0, ok := textureMap[d.Texture0Name]
-	if !ok {
-		log.Fatalf("create: no such texture %s", d.Texture0Name)
-	}
-
-	texture1, ok := textureMap[d.Texture1Name]
-	if !ok {
-		log.Fatalf("create: no such texture %s", d.Texture1Name)
-	}
-
-	count := len(d.Vertices)
-	if count != len(d.TexCoords0) || count != len(d.TexCoords1) {
-		log.Fatalf("create: vertices and texcoords lens mismatch")
-	}
-
-	g.Texture0 = texture0
-	g.Texture1 = texture1
-	g.Vertices = make([]Vec3, count)
-	g.TexCoords0 = make([]Vec2, count)
-	g.TexCoords1 = make([]Vec2, count)
-	copy(g.Vertices, d.Vertices)
-	copy(g.TexCoords0, d.TexCoords0)
-	copy(g.TexCoords1, d.TexCoords1)
-	g.Count = count
+	g.Shader = getShader(d.ShaderName)
+	g.Texture0 = getTexture(d.Texture0Name)
+	g.Texture1 = getTexture(d.Texture1Name)
+	g.Texture2 = getTexture(d.Texture2Name)
+	g.Texture3 = getTexture(d.Texture3Name)
+	g.Buffer = NewBuffer(g.Shader, d.BufferAttrs)
+	g.Buffer.arrayFloat(d.Array)
 	return g
 }
 
+// Well it should be Geom3 but I don't feel like changing every name now
 type Geom2 struct {
-	Texture0   Texture
-	Texture1   Texture
-	Vertices   []Vec3
-	TexCoords0 []Vec2
-	TexCoords1 []Vec2
-	Count      int
+	Shader   Shader
+	Texture0 Texture
+	Texture1 Texture
+	Texture2 Texture
+	Texture3 Texture
+	Buffer   *Buffer
 }
 
 func (g *Geom2) clone() *Geom2 {
 	n := new(Geom2)
+	n.Shader = g.Shader
 	n.Texture0 = g.Texture0
 	n.Texture1 = g.Texture1
-	n.Count = g.Count
-	n.Vertices = make([]Vec3, g.Count)
-	n.TexCoords0 = make([]Vec2, g.Count)
-	n.TexCoords1 = make([]Vec2, g.Count)
-	copy(g.Vertices, n.Vertices)
-	copy(g.TexCoords0, n.TexCoords0)
-	copy(g.TexCoords1, n.TexCoords1)
+	n.Texture2 = g.Texture2
+	n.Texture3 = g.Texture3
+	n.Buffer = g.Buffer
 	return n
 }
-func (g *Geom2) draw() {
-	g.Texture0.bindTo(0)
-	g.Texture1.bindTo(1)
-	g.Texture0.setFilter(TextureFilterLinear)
-	gl.Begin(gl.TRIANGLES)
-	for i := range g.Count {
-		v := g.Vertices[i]
-		t0 := g.TexCoords0[i]
-		t1 := g.TexCoords1[i]
-		gl.MultiTexCoord2f(gl.TEXTURE0, t0.X, t0.Y)
-		gl.MultiTexCoord2f(gl.TEXTURE1, t1.X, t1.Y)
-		gl.Vertex3f(v.X, v.Y, v.Z)
-	}
+func (g *Geom2) draw(m *Matrix4) {
+	g.Shader.active()
+	g.Texture0.bindTo2D(0)
+	g.Texture1.bindTo2D(1)
+	g.Texture1.bindTo2D(2)
+	uTexture0 := g.Shader.getUniform("u_Texture0")
+	uTexture1 := g.Shader.getUniform("u_Texture1")
+	uTexture2 := g.Shader.getUniform("u_Texture2")
+	uTexture3 := g.Shader.getUniform("u_Texture3")
+	uAmbLightColor := g.Shader.getUniform("u_AmbLightColor")
+	uDirLightDir := g.Shader.getUniform("u_DirLightDir")
+	uDirLightColor := g.Shader.getUniform("u_DirLightColor")
+	uPMatrix := g.Shader.getUniform("u_PMatrix")
+	uVMatrix := g.Shader.getUniform("u_VMatrix")
+	uMMatrix := g.Shader.getUniform("u_MMatrix")
 
-	gl.End()
+	ActiveLightEnv.uniform(uAmbLightColor, uDirLightDir, uDirLightColor)
+	g.Texture0.uniform(uTexture0, 0)
+	g.Texture1.uniform(uTexture1, 1)
+	g.Texture2.uniform(uTexture2, 2)
+	g.Texture3.uniform(uTexture3, 3)
+	ActivePV.ProjMatrix.uniform(uPMatrix)
+	ActivePV.ViewMatrix.uniform(uVMatrix)
+	m.uniform(uMMatrix)
+	g.Buffer.bind()
+	g.Buffer.draw()
 }

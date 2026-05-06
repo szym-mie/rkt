@@ -10,17 +10,11 @@
     },
     "body": {
         "inertia": [0.33, 0.33, 0.50],
-        "tapers": [{
-            "texture": "base/part/decoupa",
-            "rings": 16,
-            "upper": { "offset": 0.8, "radius": 1.0 },
-            "lower": { "offset": -0.2, "radius": 1.0 }
-        }],
-        "planes": []
+        "geoms": ["base/geom/decoup10"]
     },
     "attach": {
-        "upper": [0.0, 0.0, 0.8],
-        "lower": [0.0, 0.0, -0.2]
+        "upper": [0.0, 0.0, 0.7],
+        "lower": [0.0, 0.0, -0.1]
     },
     "decoup": {
         "force": 100.0

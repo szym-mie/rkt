@@ -10,22 +10,11 @@
     },
     "body": {
         "inertia": [0.60, 0.60, 0.50],
-        "tapers": [{
-            "texture": "base/part/solida",
-            "rings": 16,
-            "upper": { "offset": 1.0, "radius": 1.0 },
-            "lower": { "offset": -1.0, "radius": 1.0 }
-        }, {
-            "texture": "base/part/nozzlea",
-            "rings": 16,
-            "upper": { "offset": -1.0, "radius": 0.6 },
-            "lower": { "offset": -1.6, "radius": 0.8 }
-        }],
-        "planes": []
+        "geoms": ["base/geom/solid101"]
     },
     "attach": {
         "upper": [0.0, 0.0, 1.0],
-        "lower": [0.0, 0.0, -1.6]
+        "lower": [0.0, 0.0, -1.0]
     },
     "engine": {
         "fuel": {
@@ -34,9 +23,15 @@
             "flow": 2000.0
         },
         "plume": {
+            "shader": "base/glsl/sparks",
             "texture": "base/part/plume1",
             "offset": [0.0, 0.0, -1.0],
-            "size": 1.0
+            "size": 1.0,
+            "pt_cnt": 64,
+            "emit_rate": 8,
+            "init_vel": [0.0, 0.0, -64.0],
+            "side_vel": [16.0, 16.0, 8.0],
+            "drag": 4.0
         },
         "can_shutdown": false
     }

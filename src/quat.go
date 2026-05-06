@@ -2,8 +2,6 @@ package rkt
 
 import (
 	"math"
-
-	"github.com/go-gl/gl/v2.1/gl"
 )
 
 type Quat struct {
@@ -95,7 +93,7 @@ func (q Quat) Rotate(v Vec3) Vec3 {
 	o := q.Product(p).Product(q.Conj())
 	return Vec3{o.b, o.c, o.d}
 }
-func (q Quat) Apply() {
+func (q Quat) Apply() *Matrix4 {
 	xw := 2 * q.b * q.a
 	xx := 2 * q.b * q.b
 	xy := 2 * q.b * q.c
@@ -106,13 +104,12 @@ func (q Quat) Apply() {
 	zw := 2 * q.d * q.a
 	zz := 2 * q.d * q.d
 
-	v := [16]float32{
+	return &Matrix4{
 		1 - yy - zz, xy + zw, xz - yw, 0.0,
 		xy - zw, 1 - xx - zz, yz + xw, 0.0,
 		xz + yw, yz - xw, 1 - xx - yy, 0.0,
 		0.0, 0.0, 0.0, 1.0,
 	}
-	gl.MultMatrixf(&v[0])
 }
 
 // order or Euler axis vectors: Z (roll), Y (pitch), X (heading)

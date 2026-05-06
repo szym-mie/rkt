@@ -10,13 +10,7 @@
     },
     "body": {
         "inertia": [0.47, 0.47, 0.28],
-        "tapers": [{
-            "texture": "base/part/pod10",
-            "rings": 16,
-            "upper": { "offset": 1.0, "radius": 0.5 },
-            "lower": { "offset": -1.0, "radius": 1.0 }
-        }],
-        "planes": []
+        "geoms": ["base/geom/pod10"]
     },
     "attach": {
         "upper": [0.0, 0.0, 1.0],

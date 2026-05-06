@@ -1,9 +1,5 @@
 package rkt
 
-import (
-	"github.com/go-gl/gl/v2.1/gl"
-)
-
 type Vehicle struct {
 	Name          string
 	Parts         *PartNode
@@ -42,18 +38,15 @@ func (v *Vehicle) Fork(nodes *PartNode) *Vehicle {
 	return w
 }
 func (v *Vehicle) Draw() {
-	gl.MatrixMode(gl.MODELVIEW)
-	gl.PushMatrix()
-	v.Pos.Apply()
-	v.Rot.Apply()
+	model := NewMatrix4Pos(v.Pos)
+	model.MulSelf(v.Rot.Apply())
 	for node := v.Parts; node != nil; node = node.Lower {
-		node.Part.draw(&node.Offset)
+		node.Part.draw(model, &node.Offset)
 	}
 	for node := v.Parts.Upper; node != nil; node = node.Upper {
-		node.Part.draw(&node.Offset)
+		node.Part.draw(model, &node.Offset)
 	}
 	DrawDiamond(v.Com)
-	gl.PopMatrix()
 }
 func (v *Vehicle) Update(dt float32) {
 	v.UpdateHeight()
@@ -84,7 +77,7 @@ func (v *Vehicle) Update(dt float32) {
 	w := Quat{0.0, v.Ang.X, v.Ang.Y, v.Ang.Z}.Scale(dt * 0.5)
 	w.a += 1.0
 	v.Rot = w.Product(v.Rot).Norm()
-	v.Ang = v.Ang.MulSca(0.99)
+	v.Ang = v.Ang.MulSca(1.0 - 0.5*dt)
 }
 func (v *Vehicle) AddToStage(part Part) {
 	s := new(StageNode)
@@ -161,7 +154,7 @@ func (v *Vehicle) ApplyImpulse(imp, pt Vec3) {
 	// angular impulse
 	torque := pt.Sub(v.Com).Cross(v.Rot.Conj().Rotate(imp))
 	// TODO: only remaining energy should go into linear motion not full
-	v.Ang = v.Ang.Add(v.Rot.Rotate(torque).Div(v.Inertia))
+	v.Ang = v.Ang.Add(v.Rot.Rotate(torque.Div(v.Inertia)))
 	v.Vel = v.Vel.Add(imp.MulSca(1.0 / v.Mass))
 	// TODO: draw force vector because why not
 	DrawVector(imp.MulSca(0.01), v.Pos.Add(v.Rot.Rotate(pt)))
