@@ -129,9 +129,7 @@ func (p *PartEngine) draw(model *Matrix4, offset *Vec3) {
 	modelOffset := NewMatrix4Pos(*offset)
 	local := model.Mul(modelOffset)
 	p.drawModel(local)
-	if p.IsActive && p.FuelMass > 0.0 {
-		p.Plume.draw(*local)
-	}
+	p.Plume.draw(*local)
 }
 func (p *PartEngine) update(v *Vehicle, n *PartNode, dt float32) {
 	applyDrag(v, n, dt)
@@ -139,7 +137,7 @@ func (p *PartEngine) update(v *Vehicle, n *PartNode, dt float32) {
 	e := p.Def.Engine
 	if p.IsActive {
 		p.FuelFlow = e.FuelDef.Flow
-		p.Plume.update(v.Pos, dt)
+		// TODO: better FX
 	} else if e.CanShutdown {
 		p.FuelFlow = 0.0
 	}
@@ -156,6 +154,12 @@ func (p *PartEngine) update(v *Vehicle, n *PartNode, dt float32) {
 		p.FuelFlow = 0.0
 		p.FuelMass = 0.0
 	}
+
+	if p.IsActive && p.FuelMass > 0.0 {
+		p.Plume.emit(v.Pos, v.Vel, n.Offset, v.Rot)
+	}
+
+	p.Plume.update(dt)
 }
 func (p *PartEngine) getMass() float32 {
 	return p.Def.Mass + p.FuelMass

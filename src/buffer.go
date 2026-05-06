@@ -99,6 +99,10 @@ func (b *Buffer) arrayVec3(data []Vec3) {
 	size := len(data) * 3
 	b.setDataSized(data, size)
 }
+func (b *Buffer) arrayVec4(data []Vec4) {
+	size := len(data) * 4
+	b.setDataSized(data, size)
+}
 func (b *Buffer) bind() {
 	gl.BindVertexArray(b.vaoHandle)
 }

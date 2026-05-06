@@ -28,9 +28,10 @@
             "offset": [0.0, 0.0, -1.0],
             "size": 1.0,
             "pt_cnt": 64,
-            "emit_rate": 256,
-            "init_vel": 16.0,
-            "drag": 0.8
+            "emit_rate": 8,
+            "init_vel": [0.0, 0.0, -64.0],
+            "side_vel": [16.0, 16.0, 8.0],
+            "drag": 4.0
         },
         "can_shutdown": false
     }

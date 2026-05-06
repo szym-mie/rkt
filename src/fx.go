@@ -1,7 +1,5 @@
 package rkt
 
-import "log"
-
 type PlumeDef struct {
 	ShaderName  string  `json:"shader"`
 	TextureName string  `json:"texture"`
@@ -9,12 +7,13 @@ type PlumeDef struct {
 	Size        float32 `json:"size"`
 	PtCnt       uint32  `json:"pt_cnt"`
 	EmitRate    uint32  `json:"emit_rate"`
-	InitVel     float32 `json:"init_vel"`
+	InitVel     Vec3    `json:"init_vel"`
+	SideVel     Vec3    `json:"side_vel"`
 	DragCoeff   float32 `json:"drag"`
 }
 
 var plumeBufferAttrs = []BufferAttr{
-	{BufferAttrPos, "a_Pos", 3},
+	{BufferAttrPos, "a_Pos", 4},
 }
 
 func (d *PlumeDef) create() *Plume {
@@ -22,27 +21,21 @@ func (d *PlumeDef) create() *Plume {
 	// TODO: revamp fx with particles
 	p.shader = getShader(d.ShaderName)
 	p.buffer = NewBuffer(p.shader, plumeBufferAttrs)
-	p.offset = d.Offset
-	p.local = Matrix4{}
-	p.local.SetPos(p.offset)
-	p.ptPos = make([]Vec3, d.PtCnt)
+	p.ptPos = make([]Vec4, d.PtCnt)
 	p.ptVel = make([]Vec3, d.PtCnt)
-	p.ptCnt = d.PtCnt
-	p.emitRate = d.EmitRate
-	p.emitIndex = 0
+	p.ptDecay = float32(d.EmitRate) / float32(d.PtCnt)
+	p.def = d
 	return p
 }
 
 type Plume struct {
 	shader    Shader
 	buffer    *Buffer
-	offset    Vec3
-	local     Matrix4
-	ptPos     []Vec3
+	ptPos     []Vec4
 	ptVel     []Vec3
-	ptCnt     uint32
-	emitRate  uint32
+	ptDecay   float32
 	emitIndex uint32
+	def       *PlumeDef
 }
 
 func (p *Plume) draw(model Matrix4) {
@@ -54,11 +47,26 @@ func (p *Plume) draw(model Matrix4) {
 	p.buffer.bind()
 	p.buffer.drawPts()
 }
-func (p *Plume) update(pos Vec3, dt float32) {
+func (p *Plume) emit(pos, vel, offset Vec3, rot Quat) {
+	for range p.def.EmitRate {
+		totalOffset := offset.Add(p.def.Offset)
+		worldPos := pos.Add(rot.Rotate(totalOffset))
+		sideVel := p.def.SideVel.RandomSphere()
+		localVel := p.def.InitVel.Add(sideVel)
+		worldVel := vel.Add(rot.Rotate(localVel))
+		p.ptPos[p.emitIndex] = worldPos.To4(0.0)
+		p.ptVel[p.emitIndex] = worldVel
+		p.emitIndex++
+		p.emitIndex %= p.def.PtCnt
+	}
+}
+func (p *Plume) update(dt float32) {
 	// TODO: add sparks
-	log.Printf("%v\n", pos)
-	p.ptPos[p.emitIndex] = pos
-	p.emitIndex++
-	p.emitIndex %= p.ptCnt
-	p.buffer.arrayVec3(p.ptPos)
+	drag := 1.0 - p.def.DragCoeff*dt
+	for i := range p.ptPos {
+		vel := p.ptVel[i].MulSca(dt)
+		p.ptPos[i] = p.ptPos[i].Add(vel.To4(p.ptDecay))
+		p.ptVel[i] = p.ptVel[i].MulSca(drag)
+	}
+	p.buffer.arrayVec4(p.ptPos)
 }
