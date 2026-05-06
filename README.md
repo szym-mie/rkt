@@ -1,9 +1,8 @@
 # rkt
 
-![sshot1](./promo/sshot1.jpg)
-![sshot2](./promo/sshot2.jpg)
-![sshot3](./promo/sshot3.jpg)
-![sshot4](./promo/sshot4.jpg)
+![sshot1](./promo/sshot1_v9.jpg)
+![sshot2](./promo/sshot2_v9.jpg)
+![sshot3](./promo/sshot3_v9.jpg)
 
 ## 1. Quickstart
 
@@ -51,6 +50,8 @@ A short and hopefully up-to-date list of things to implement:
 - Calculate Centre of Mass
 - Angular movement around the CoM
 - Inertia calculated based on the simple geom. shape description
+- Migrate to OpenGL3
+- Altitude-dependent skybox
 
 #### WIP
 
@@ -59,7 +60,6 @@ A short and hopefully up-to-date list of things to implement:
 
 #### TODO
 
-- Altitude-dependent skybox
 - Proper terrain collisions
 - Try out orbital mechanics
 - Fuel flow and distribution
@@ -68,10 +68,20 @@ A short and hopefully up-to-date list of things to implement:
 - Ailerons, rudders, elevators
 - Airbrakes and spoilers
 - Cockpit view
-- Migrate to OpenGL3
 
 #### IDEA
 
 - Key-based (with some mouse usage) vehicle editor
 - Electrical circuits: actuators, generators, batteries
 - Hydraulic circuits: servos, actuators, accumulators, pumps
+
+## 5. Legacy
+
+### rktv7
+
+Version before the migration from OpenGL 2.1 to OpenGL 3.3.
+
+![sshot1](./promo/sshot1_v7.jpg)
+![sshot2](./promo/sshot2_v7.jpg)
+![sshot3](./promo/sshot3_v7.jpg)
+![sshot4](./promo/sshot4_v7.jpg)
