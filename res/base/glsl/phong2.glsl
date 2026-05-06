@@ -17,13 +17,13 @@ uniform mat4 u_MMatrix;
 
 void main() {
     gl_Position = u_PMatrix * u_VMatrix * u_MMatrix * vec4(a_Pos.xyz, 1.0);
-    mat3 mmat = mat3(u_MMatrix);
-    v_Norm = mmat * normalize(a_Norm);
+    mat3 model = mat3(u_MMatrix);
+    v_Norm = model * normalize(a_Norm);
     v_FragPos = vec3(u_MMatrix * vec4(a_Pos, 1.0));
     v_UV0 = a_UV0;
 
-    vec3 n = normalize(mmat * a_Norm);
-    vec3 t = normalize(mmat * a_Tang);
+    vec3 n = normalize(model * a_Norm);
+    vec3 t = normalize(model * a_Tang);
     vec3 b = cross(n, t);
     v_TBNMatrix = mat3(t, b, n);
 }

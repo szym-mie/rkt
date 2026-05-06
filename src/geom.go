@@ -1,32 +1,18 @@
 package rkt
 
-import (
-	"log"
-)
-
 type Geom1Def struct {
 	ShaderName  string
 	TextureName string
 	BufferAttrs []BufferAttr
-	RawArray    []float32
+	Array       []float32
 }
 
 func (d *Geom1Def) create() *Geom1 {
 	g := new(Geom1)
-	shader, ok := shaderMap[d.ShaderName]
-	if !ok {
-		log.Fatalf("create: no such shader %s", d.ShaderName)
-	}
-
-	texture, ok := textureMap[d.TextureName]
-	if !ok {
-		log.Fatalf("create: no such texture %s", d.TextureName)
-	}
-
-	g.Shader = shader
-	g.Texture = texture
-	g.Buffer = NewBuffer(shader, d.BufferAttrs)
-	g.Buffer.data(d.RawArray)
+	g.Shader = getShader(d.ShaderName)
+	g.Texture = getTexture(d.TextureName)
+	g.Buffer = NewBuffer(g.Shader, d.BufferAttrs)
+	g.Buffer.arrayFloat(d.Array)
 	return g
 }
 
@@ -45,7 +31,7 @@ func (g *Geom1) clone() *Geom1 {
 }
 func (g *Geom1) draw(m *Matrix4) {
 	g.Shader.active()
-	g.Texture.bind()
+	g.Texture.bind2D()
 	uTexture := g.Shader.getUniform("u_Texture")
 	uAmbLightColor := g.Shader.getUniform("u_AmbLightColor")
 	uDirLightDir := g.Shader.getUniform("u_DirLightDir")
@@ -70,43 +56,18 @@ type Geom2Def struct {
 	Texture2Name string
 	Texture3Name string
 	BufferAttrs  []BufferAttr
-	RawArray     []float32
+	Array        []float32
 }
 
 func (d *Geom2Def) create() *Geom2 {
 	g := new(Geom2)
-	shader, ok := shaderMap[d.ShaderName]
-	if !ok {
-		log.Fatalf("create: no such shader %s", d.ShaderName)
-	}
-
-	texture0, ok := textureMap[d.Texture0Name]
-	if !ok {
-		log.Fatalf("create: no such texture %s", d.Texture0Name)
-	}
-
-	texture1, ok := textureMap[d.Texture1Name]
-	if !ok {
-		log.Fatalf("create: no such texture %s", d.Texture1Name)
-	}
-
-	texture2, ok := textureMap[d.Texture2Name]
-	if !ok {
-		log.Fatalf("create: no such texture %s", d.Texture2Name)
-	}
-
-	texture3, ok := textureMap[d.Texture3Name]
-	if !ok {
-		log.Fatalf("create: no such texture %s", d.Texture3Name)
-	}
-
-	g.Shader = shader
-	g.Texture0 = texture0
-	g.Texture1 = texture1
-	g.Texture2 = texture2
-	g.Texture3 = texture3
-	g.Buffer = NewBuffer(shader, d.BufferAttrs)
-	g.Buffer.data(d.RawArray)
+	g.Shader = getShader(d.ShaderName)
+	g.Texture0 = getTexture(d.Texture0Name)
+	g.Texture1 = getTexture(d.Texture1Name)
+	g.Texture2 = getTexture(d.Texture2Name)
+	g.Texture3 = getTexture(d.Texture3Name)
+	g.Buffer = NewBuffer(g.Shader, d.BufferAttrs)
+	g.Buffer.arrayFloat(d.Array)
 	return g
 }
 
@@ -132,9 +93,9 @@ func (g *Geom2) clone() *Geom2 {
 }
 func (g *Geom2) draw(m *Matrix4) {
 	g.Shader.active()
-	g.Texture0.bindTo(0)
-	g.Texture1.bindTo(1)
-	g.Texture1.bindTo(2)
+	g.Texture0.bindTo2D(0)
+	g.Texture1.bindTo2D(1)
+	g.Texture1.bindTo2D(2)
 	uTexture0 := g.Shader.getUniform("u_Texture0")
 	uTexture1 := g.Shader.getUniform("u_Texture1")
 	uTexture2 := g.Shader.getUniform("u_Texture2")

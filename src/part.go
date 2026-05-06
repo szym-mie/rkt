@@ -139,6 +139,7 @@ func (p *PartEngine) update(v *Vehicle, n *PartNode, dt float32) {
 	e := p.Def.Engine
 	if p.IsActive {
 		p.FuelFlow = e.FuelDef.Flow
+		p.Plume.update(v.Pos, dt)
 	} else if e.CanShutdown {
 		p.FuelFlow = 0.0
 	}
@@ -150,7 +151,6 @@ func (p *PartEngine) update(v *Vehicle, n *PartNode, dt float32) {
 		v.Vel = v.Vel.Add(v.Rot.Rotate(forceVec).MulSca(1 / v.Mass))
 		fuelCons := p.FuelFlow * dt
 		p.FuelMass -= min(fuelCons, p.FuelMass)
-		p.Plume.update(dt)
 	} else {
 		// engine shutdown
 		p.FuelFlow = 0.0
@@ -194,7 +194,7 @@ func (p *PartChute) update(v *Vehicle, n *PartNode, dt float32) {
 		p.ChuteAntiRot = v.Rot.Conj()
 		p.ChuteRot = NewVecDiffQuat(v.Vel, Vec3{0, 0, -1}).Norm()
 		if p.IsUsed {
-			p.DeployTime = Min(p.DeployTime+dt, c.DeployTime)
+			p.DeployTime = Minf(p.DeployTime+dt, c.DeployTime)
 		} else {
 			p.DeployTime = 0
 			p.IsUsed = true

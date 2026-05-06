@@ -23,9 +23,14 @@
             "flow": 2000.0
         },
         "plume": {
+            "shader": "base/glsl/sparks",
             "texture": "base/part/plume1",
             "offset": [0.0, 0.0, -1.0],
-            "size": 1.0
+            "size": 1.0,
+            "pt_cnt": 64,
+            "emit_rate": 256,
+            "init_vel": 16.0,
+            "drag": 0.8
         },
         "can_shutdown": false
     }

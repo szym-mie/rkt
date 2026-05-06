@@ -119,9 +119,9 @@ func (v Vec3) Cross(u Vec3) Vec3 {
 }
 func (v Vec3) Ortho() Vec3 {
 	other := Vec3{}
-	x := math.Abs(float64(v.X))
-	y := math.Abs(float64(v.Y))
-	z := math.Abs(float64(v.Z))
+	x := Absf(v.X)
+	y := Absf(v.Y)
+	z := Absf(v.Z)
 	if x < y {
 		if x < z {
 			other.X = 1.0
@@ -141,9 +141,6 @@ func (v Vec3) Ortho() Vec3 {
 func (v Vec3) uniform(location int32) {
 	gl.Uniform3f(location, v.X, v.Y, v.Z)
 }
-func uniformVecArray3(vs []Vec3, location int32) {
-	gl.Uniform3fv(location, int32(len(vs)), &vs[0].X)
-}
 
 type Vec4 struct {
 	X, Y, Z, W float32
@@ -153,7 +150,11 @@ func (v Vec4) Dot(u Vec4) float32 {
 	return v.X*u.X + v.Y*u.Y + v.Z*u.Z + v.W*u.W
 }
 
-func Min(x, y float32) float32 {
+func Absf(x float32) float32 {
+	return float32(math.Abs(float64(x)))
+}
+
+func Minf(x, y float32) float32 {
 	if x > y {
 		return y
 	}
@@ -161,7 +162,7 @@ func Min(x, y float32) float32 {
 	return x
 }
 
-func Max(x, y float32) float32 {
+func Maxf(x, y float32) float32 {
 	if x < y {
 		return y
 	}
@@ -169,7 +170,7 @@ func Max(x, y float32) float32 {
 	return x
 }
 
-func Clamp(x float32, min, max float32) float32 {
+func Clampf(x float32, min, max float32) float32 {
 	if x < min {
 		return min
 	}

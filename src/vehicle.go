@@ -77,7 +77,7 @@ func (v *Vehicle) Update(dt float32) {
 	w := Quat{0.0, v.Ang.X, v.Ang.Y, v.Ang.Z}.Scale(dt * 0.5)
 	w.a += 1.0
 	v.Rot = w.Product(v.Rot).Norm()
-	v.Ang = v.Ang.MulSca(0.99)
+	v.Ang = v.Ang.MulSca(1.0 - 0.5*dt)
 }
 func (v *Vehicle) AddToStage(part Part) {
 	s := new(StageNode)

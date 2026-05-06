@@ -28,7 +28,8 @@ const (
 var pause bool
 var focusIndex uint
 var mainVehicle *rkt.Vehicle
-var radius float32
+var speedup int8 = 4
+var radius float32 = 10
 
 const ctrlSpeed = 0.4
 
@@ -75,6 +76,14 @@ func onKey(w *glfw.Window, key glfw.Key, sc int, act glfw.Action, mods glfw.Modi
 			mainVehicle.Ang = mainVehicle.Ang.Add(mainVehicle.Rot.Rotate(ctrlVector(rkt.ZAxis, +ctrlSpeed*10)))
 		case glfw.KeyF2:
 			focusIndex = (focusIndex + 1) % rkt.VehiclesIndex
+		case glfw.KeyComma:
+			if speedup > 1 {
+				speedup /= 2
+			}
+		case glfw.KeyPeriod:
+			if speedup < 32 {
+				speedup *= 2
+			}
 		}
 	}
 }
@@ -112,6 +121,8 @@ func main() {
 	gl.DepthFunc(gl.LESS)
 	gl.ClearDepth(1.0)
 
+	gl.Enable(gl.PROGRAM_POINT_SIZE)
+
 	// fog := [4]float32{0.2, 0.7, 0.8, 0.0}
 	// gl.Enable(gl.FOG)
 	// gl.Fogi(gl.FOG_MODE, gl.LINEAR)
@@ -141,6 +152,8 @@ func main() {
 	rkt.InitTextureUnit(3)
 
 	rkt.LoadPkg("res/base.zip")
+
+	sky := rkt.NewSky()
 
 	hud := rkt.NewHud()
 	hud.SetViewport(w, h)
@@ -209,9 +222,13 @@ func main() {
 			}
 			v.Draw()
 			if !pause {
-				v.Update(float32(dt.Seconds()))
+				v.Update(float32(dt.Seconds()) * float32(speedup) / 4)
 			}
 		}
+
+		gl.DepthFunc(gl.LEQUAL)
+		sky.Draw()
+		gl.DepthFunc(gl.LESS)
 
 		rkt.ActivePV = &hud.PVMatrix
 		hud.Draw(mainVehicle.Rot)

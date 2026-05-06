@@ -74,7 +74,7 @@ func (v *Adi) draw(input Quat) {
 	pr := input.Rotate(Vec3{0, 0, 1})
 	up := input.Rotate(Vec3{1, 0, 0})
 	lf := input.Rotate(Vec3{0, 1, 0})
-	pitch := math.Asin(float64(Clamp(pr.Z, -1.0, 1.0)))
+	pitch := math.Asin(float64(Clampf(pr.Z, -1.0, 1.0)))
 	roll := -math.Atan2(float64(lf.Z), float64(up.Z))
 	yaw := -math.Atan2(float64(pr.X), float64(pr.Y))
 	model.RotZ(float32(roll))

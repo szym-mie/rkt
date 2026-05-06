@@ -66,8 +66,7 @@ func (b *Buffer) confAttrs(attrs []BufferAttr) {
 func (b *Buffer) newDataArray(count int) []float32 {
 	return make([]float32, int32(count)*b.Stride4)
 }
-func (b *Buffer) data(data []float32) {
-	size := len(data)
+func (b *Buffer) setDataSized(data any, size int) {
 	gl.BindVertexArray(b.vaoHandle)
 	gl.BindBuffer(gl.ARRAY_BUFFER, b.vboHandle)
 	gl.BufferData(gl.ARRAY_BUFFER, size*4, gl.Ptr(data), gl.STATIC_DRAW)
@@ -92,9 +91,20 @@ func (b *Buffer) data(data []float32) {
 		offset += uintptr(attr.Cocnt * 4)
 	}
 }
+func (b *Buffer) arrayFloat(data []float32) {
+	size := len(data)
+	b.setDataSized(data, size)
+}
+func (b *Buffer) arrayVec3(data []Vec3) {
+	size := len(data) * 3
+	b.setDataSized(data, size)
+}
 func (b *Buffer) bind() {
 	gl.BindVertexArray(b.vaoHandle)
 }
 func (b *Buffer) draw() {
 	gl.DrawArrays(gl.TRIANGLES, 0, b.Cnt)
+}
+func (b *Buffer) drawPts() {
+	gl.DrawArrays(gl.POINTS, 0, b.Cnt)
 }

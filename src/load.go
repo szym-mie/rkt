@@ -18,6 +18,38 @@ var geom2DefMap = make(map[string]*Geom2Def, 64)
 var patchDefMap = make(map[string]*PatchDef, 64)
 var partDefMap = make(map[string]*PartDef, 64)
 
+const imgFallbackName = "base/aaa"
+
+func getBitmap(name string) *Bitmap {
+	if bitmap, ok := bitmapMap[name]; ok {
+		return bitmap
+	}
+	if aaa, ok := bitmapMap[imgFallbackName]; ok {
+		return aaa
+	}
+	log.Fatalf("no such bitmap %s", name)
+	return nil
+}
+
+func getShader(name string) Shader {
+	if shader, ok := shaderMap[name]; ok {
+		return shader
+	}
+	log.Fatalf("no such shader %s", name)
+	return 0
+}
+
+func getTexture(name string) Texture {
+	if texture, ok := textureMap[name]; ok {
+		return texture
+	}
+	if aaa, ok := textureMap[imgFallbackName]; ok {
+		return aaa
+	}
+	log.Fatalf("no such texture %s", name)
+	return 0
+}
+
 func loadBitmap(r io.Reader) *Bitmap {
 	img, _, err := image.Decode(r)
 	if err != nil {
@@ -93,7 +125,7 @@ func loadBMLGeom(r io.Reader) (*Geom1Def, *Geom2Def) {
 			def1.BufferAttrs[i].Cocnt = int32(bmlAttrib.Cocnt)
 			def1.BufferAttrs[i].Name = bmlAttrib.Name
 		}
-		def1.RawArray = bml.Buffer
+		def1.Array = bml.Buffer
 		return def1, nil
 	case 4:
 		def2 := new(Geom2Def)
@@ -108,7 +140,7 @@ func loadBMLGeom(r io.Reader) (*Geom1Def, *Geom2Def) {
 			def2.BufferAttrs[i].Cocnt = int32(bmlAttrib.Cocnt)
 			def2.BufferAttrs[i].Name = bmlAttrib.Name
 		}
-		def2.RawArray = bml.Buffer
+		def2.Array = bml.Buffer
 		return nil, def2
 	default:
 		log.Fatalf("load_bml_geom: invalid number of textures %d\n", textureCnt)
@@ -152,7 +184,8 @@ func LoadPkg(filename string) uint {
 			log.Printf("+texture %s", name)
 			bitmap := loadBitmap(fp)
 			bitmapMap[name] = bitmap
-			textureMap[name] = bitmap.createTexture()
+			// TODO: lazy loading?
+			textureMap[name] = createTexture2D(bitmap)
 		case "glsl":
 			log.Printf("+shader %s", name)
 			shaderMap[name] = loadShader(fp)

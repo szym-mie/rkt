@@ -106,6 +106,48 @@ func (m *Matrix4) Scale3(p Vec3) {
 	n.SetScale3(p)
 	m.MulSelf(n)
 }
+
+const eps = 0.000001
+
+func (m *Matrix4) Invert() *Matrix4 {
+	b00 := m[0]*m[5] - m[1]*m[4]
+	b01 := m[0]*m[6] - m[2]*m[4]
+	b02 := m[0]*m[7] - m[3]*m[4]
+	b03 := m[1]*m[6] - m[2]*m[5]
+	b04 := m[1]*m[7] - m[3]*m[5]
+	b05 := m[2]*m[7] - m[3]*m[6]
+	b06 := m[8]*m[13] - m[9]*m[12]
+	b07 := m[8]*m[14] - m[10]*m[12]
+	b08 := m[8]*m[15] - m[11]*m[12]
+	b09 := m[9]*m[14] - m[10]*m[13]
+	b10 := m[9]*m[15] - m[11]*m[13]
+	b11 := m[10]*m[15] - m[11]*m[14]
+
+	det := b00*b11 - b01*b10 + b02*b09 + b03*b08 - b04*b07 + b05*b06
+	if det > -eps && det < eps {
+		return m
+	}
+	det = 1.0 / det
+
+	n := new(Matrix4)
+	n[0] = (m[5]*b11 - m[6]*b10 + m[7]*b09) * det
+	n[1] = (m[2]*b10 - m[1]*b11 - m[3]*b09) * det
+	n[2] = (m[13]*b05 - m[14]*b04 + m[15]*b03) * det
+	n[3] = (m[10]*b04 - m[9]*b05 - m[11]*b03) * det
+	n[4] = (m[6]*b08 - m[4]*b11 - m[7]*b07) * det
+	n[5] = (m[0]*b11 - m[2]*b08 + m[3]*b07) * det
+	n[6] = (m[14]*b02 - m[12]*b05 - m[15]*b01) * det
+	n[7] = (m[8]*b05 - m[10]*b02 + m[11]*b01) * det
+	n[8] = (m[4]*b10 - m[5]*b08 + m[7]*b06) * det
+	n[9] = (m[1]*b08 - m[0]*b10 - m[3]*b06) * det
+	n[10] = (m[12]*b04 - m[13]*b02 + m[15]*b00) * det
+	n[11] = (m[9]*b02 - m[8]*b04 - m[11]*b00) * det
+	n[12] = (m[5]*b07 - m[4]*b09 - m[6]*b06) * det
+	n[13] = (m[0]*b09 - m[1]*b07 + m[2]*b06) * det
+	n[14] = (m[13]*b01 - m[12]*b03 - m[14]*b00) * det
+	n[15] = (m[8]*b03 - m[9]*b01 + m[10]*b00) * det
+	return n
+}
 func (m *Matrix4) Add(n *Matrix4) *Matrix4 {
 	return &Matrix4{
 		m[0] + n[0], m[1] + n[1], m[2] + n[2], m[3] + n[3],
