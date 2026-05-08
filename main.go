@@ -162,7 +162,7 @@ func main() {
 	camera.SetViewport(w, h)
 	camera.CaptureMouse(window)
 
-	rkt.ActiveLightEnv.AmbColor = rkt.Vec3{X: 0.4, Y: 0.4, Z: 0.5}
+	rkt.ActiveLightEnv.AmbColor = rkt.Vec3{X: 0.1, Y: 0.1, Z: 0.15}
 	rkt.ActiveLightEnv.DirLights[0] = rkt.DirLight{
 		Dir:   rkt.Vec3{X: 0.7, Y: 0.3, Z: 0.5},
 		Color: rkt.Vec3{X: 0.9, Y: 0.9, Z: 1.0}}
@@ -198,6 +198,8 @@ func main() {
 	// patchInf := rkt.NewPatch("base/patch/inf")
 	// patchInf.Scale = 1600.0
 
+	t := time.Time{}.Add(time.Hour * 5)
+
 	rkt.InitDraw()
 	rkt.SetLineColor(1.0, 0.0, 0.0)
 	for !window.ShouldClose() {
@@ -214,6 +216,10 @@ func main() {
 
 		dt := time.Millisecond * 25
 
+		gl.DepthFunc(gl.LEQUAL)
+		sky.Draw()
+		gl.DepthFunc(gl.LESS)
+
 		patch00.Draw()
 		// patchInf.Draw()
 		for _, v := range rkt.Vehicles {
@@ -226,9 +232,8 @@ func main() {
 			}
 		}
 
-		gl.DepthFunc(gl.LEQUAL)
-		sky.Draw()
-		gl.DepthFunc(gl.LESS)
+		t = t.Add(400 * dt)
+		rkt.ActiveLightEnv.SetFromExtern(t, rkt.Vec3{})
 
 		rkt.ActivePV = &hud.PVMatrix
 		hud.Draw(mainVehicle.Rot)

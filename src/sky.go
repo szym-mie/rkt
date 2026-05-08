@@ -22,8 +22,13 @@ func (s *Sky) Draw() {
 	// s.Texture.bind()
 	uPMatrix := s.Shader.getUniform("u_PMatrix")
 	uVMatrix := s.Shader.getUniform("u_VMatrix")
+	uSunDir := s.Shader.getUniform("u_SunDir")
+	uSunColor := s.Shader.getUniform("u_SunColor")
 	ActivePV.ProjMatrix.uniform(uPMatrix)
 	ActivePV.ViewMatrix.uniform(uVMatrix)
+	sun := ActiveLightEnv.DirLights[0]
+	sun.Dir.uniform(uSunDir)
+	sun.Color.uniform(uSunColor)
 	s.Buffer.bind()
 	s.Buffer.draw()
 }
