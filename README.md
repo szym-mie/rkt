@@ -1,8 +1,6 @@
 # rkt
 
-![sshot1](./promo/sshot1_v9.jpg)
-![sshot2](./promo/sshot2_v9.jpg)
-![sshot3](./promo/sshot3_v9.jpg)
+![splash](./promo/sshot4_v9.gif)
 
 ## 1. Quickstart
 
@@ -36,7 +34,13 @@ Available make actions:
 
 The resources are stored in a single .ZIP folder, not unlike the .PK3 format. Resources other than bitmaps (and possibly sound files in the future) follow the convention of `<name>.<type>.<ext>` - allowing the game to discern between different resource types and thus to use an correct loader.
 
-## 4. Progress
+## 4. Gallery
+
+![sshot1](./promo/sshot1_v9.jpg)
+![sshot2](./promo/sshot2_v9.jpg)
+![sshot3](./promo/sshot3_v9.jpg)
+
+## 5. Progress
 
 A short and hopefully up-to-date list of things to implement:
 
@@ -75,7 +79,7 @@ A short and hopefully up-to-date list of things to implement:
 - Electrical circuits: actuators, generators, batteries
 - Hydraulic circuits: servos, actuators, accumulators, pumps
 
-## 5. Legacy
+## 6. Legacy
 
 ### rktv7
 
