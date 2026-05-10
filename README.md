@@ -4,35 +4,31 @@
 
 ## 1. Quickstart
 
-Use `make` from the project root to get a playable release.
-
 Move the mouse to rotate the camera around the craft.
 
-| keys  | action                                                     |
-| ----- | ---------------------------------------------------------- |
-| W, S  | pitch down/up                                              |
-| A, D  | yaw left/right                                             |
-| Q, E  | roll left/right                                            |
-| Space | activate the next stage (depends on vehicle configuration) |
-| -, =  | zoom camera out/in                                         |
-| Esc   | quit                                                       |
+| Keybind | Action                                                     |
+| ------- | ---------------------------------------------------------- |
+| `W`/`S` | pitch down/up                                              |
+| `A`/`D` | yaw left/right                                             |
+| `Q`/`E` | roll left/right                                            |
+| `Space` | activate the next stage (depends on vehicle configuration) |
+| `-`/`=` | zoom camera out/in                                         |
+| `,`/`.` | speed the time down/up (1/4x, 1/2x, 1x, 2x, 4x, 8x)        |
+| `Esc`   | quit                                                       |
 
 ## 2. Building
 
-Available make actions:
-
-|      Action       | Command      |
-| :---------------: | :----------- |
-|   Build release   | `make`       |
-| Development build | `make devel` |
-|  Clean all exes   | `make clean` |
-
-> [!IMPORTANT]
-> Please note that this project uses CGO and therefore make sure you have the right version of the GCC compiler installed on your machine (please refer to https://go.dev/doc/install/gccgo). On Windows Winlibs Mingw64 toolchain is confirmed to work properly.
+See [doc/BUILDING.md](doc/BUILDING.md).
 
 ## 3. Resources
 
-The resources are stored in a single .ZIP folder, not unlike the .PK3 format. Resources other than bitmaps (and possibly sound files in the future) follow the convention of `<name>.<type>.<ext>` - allowing the game to discern between different resource types and thus to use an correct loader.
+The resources are stored in a single `.zip` archive. On startup the game decompresses the archive and traverses the whole file tree, attempting to load each file. There are three rules to adding resources:
+
+- the directories' names should not contain the dot character,
+- the resource files' names should always contain a file extension,
+- the file's suffix (the part of the filename after the first dot) will be used for selecting the appropiate resource loader.
+
+Each resource is identified in-game by the access path inside the archive eg. `base/geom/home` (notice the lack of file extension) for the `base/geom/home.bml`. The identificators won't collide, since the loaded resource data is placed in two different collections. For the list of the available loaders see the bottom part of the [src/load.go](src/load.go).
 
 ## 4. Gallery
 
