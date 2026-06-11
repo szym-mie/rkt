@@ -22,6 +22,12 @@ type Geom1 struct {
 	Buffer  *Buffer
 }
 
+func (d *Geom1Def) toQuad(texture Texture) *Geom1 {
+	g := d.create()
+	g.Texture = texture
+	return g
+}
+
 func (g *Geom1) clone() *Geom1 {
 	n := new(Geom1)
 	n.Shader = g.Shader
@@ -29,7 +35,7 @@ func (g *Geom1) clone() *Geom1 {
 	n.Buffer = g.Buffer
 	return n
 }
-func (g *Geom1) draw(m *Matrix4) {
+func (g *Geom1) draw(m *Mat4) {
 	g.Shader.active()
 	g.Texture.bind2D()
 	uTexture := g.Shader.getUniform("u_Texture")
@@ -91,7 +97,7 @@ func (g *Geom2) clone() *Geom2 {
 	n.Buffer = g.Buffer
 	return n
 }
-func (g *Geom2) draw(m *Matrix4) {
+func (g *Geom2) draw(m *Mat4) {
 	g.Shader.active()
 	g.Texture0.bindTo2D(0)
 	g.Texture1.bindTo2D(1)

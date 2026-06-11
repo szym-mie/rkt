@@ -159,6 +159,9 @@ func DecodeShader(r io.Reader) (Shader, error) {
 			fragSrc += line + "\n"
 		}
 	}
+	if err := sc.Err(); err != nil {
+		return 0, err
+	}
 
 	s, err := NewShader(vertSrc, fragSrc)
 	if err != nil {

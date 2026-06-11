@@ -70,12 +70,12 @@ func NewPatch(patchName string) *Patch {
 }
 
 func (p *PatchObj) draw() {
-	model := NewMatrix4Pos(p.pos)
+	model := NewMat4Pos(p.pos)
 	p.geom.draw(model)
 }
 
 func (p *Patch) Draw() {
-	model := NewMatrix4Pos(p.Pos)
+	model := NewMat4Pos(p.Pos)
 	for _, obj := range p.objs {
 		obj.draw()
 	}

@@ -38,8 +38,8 @@ func (v *Vehicle) Fork(nodes *PartNode) *Vehicle {
 	return w
 }
 func (v *Vehicle) Draw() {
-	model := NewMatrix4Pos(v.Pos)
-	model.MulSelf(v.Rot.Apply())
+	model := NewMat4Pos(v.Pos)
+	model.MulSelf(v.Rot.ToMat4())
 	for node := v.Parts; node != nil; node = node.Lower {
 		node.Part.draw(model, &node.Offset)
 	}

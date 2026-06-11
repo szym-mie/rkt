@@ -9,9 +9,9 @@ type Quat struct {
 }
 
 func NewAxisAngleQuat(theta float32, axis Vec3) Quat {
-	rad := float64(theta) / 180 * math.Pi
-	a := float32(math.Cos(rad * 0.5))
-	s := float32(math.Sin(rad * 0.5))
+	rad := theta / 180 * math.Pi
+	a := Cosf(rad * 0.5)
+	s := Sinf(rad * 0.5)
 	return Quat{a, axis.X * s, axis.Y * s, axis.Z * s}
 }
 
@@ -49,6 +49,12 @@ func (q Quat) Norm() Quat {
 }
 func (q Quat) Add(p Quat) Quat {
 	return Quat{q.a + p.a, q.b + p.b, q.c + p.c, q.d + p.d}
+}
+func (q *Quat) AddSelf(p Quat) {
+	q.a += p.a
+	q.b += p.b
+	q.c += p.c
+	q.d += p.d
 }
 func (q Quat) Scale(k float32) Quat {
 	return Quat{q.a * k, q.b * k, q.c * k, q.d * k}
@@ -93,7 +99,7 @@ func (q Quat) Rotate(v Vec3) Vec3 {
 	o := q.Product(p).Product(q.Conj())
 	return Vec3{o.b, o.c, o.d}
 }
-func (q Quat) Apply() *Matrix4 {
+func (q Quat) ToMat4() *Mat4 {
 	xw := 2 * q.b * q.a
 	xx := 2 * q.b * q.b
 	xy := 2 * q.b * q.c
@@ -104,7 +110,7 @@ func (q Quat) Apply() *Matrix4 {
 	zw := 2 * q.d * q.a
 	zz := 2 * q.d * q.d
 
-	return &Matrix4{
+	return &Mat4{
 		1 - yy - zz, xy + zw, xz - yw, 0.0,
 		xy - zw, 1 - xx - zz, yz + xw, 0.0,
 		xz + yw, yz - xw, 1 - xx - yy, 0.0,

@@ -6,7 +6,7 @@ import (
 )
 
 type PVMatrix struct {
-	ProjMatrix, ViewMatrix Matrix4
+	ProjMatrix, ViewMatrix Mat4
 }
 
 var ActivePV *PVMatrix

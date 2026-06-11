@@ -6,7 +6,7 @@ import (
 )
 
 type Part interface {
-	draw(model *Matrix4, offset *Vec3)
+	draw(model *Mat4, offset *Vec3)
 	update(v *Vehicle, n *PartNode, dt float32)
 	getMass() float32
 	getInertiaCoeff() Vec3
@@ -37,7 +37,7 @@ func (p *PartBase) getAttachPts() (Vec3, Vec3) {
 func (p *PartBase) GetName() string {
 	return p.Def.Name
 }
-func (p *PartBase) drawModel(model *Matrix4) {
+func (p *PartBase) drawModel(model *Mat4) {
 	for _, g := range p.Geom {
 		g.draw(model)
 	}
@@ -73,8 +73,8 @@ type PartHull struct {
 	PartBase
 }
 
-func (p *PartHull) draw(model *Matrix4, offset *Vec3) {
-	modelOffset := NewMatrix4Pos(*offset)
+func (p *PartHull) draw(model *Mat4, offset *Vec3) {
+	modelOffset := NewMat4Pos(*offset)
 	p.drawModel(model.Mul(modelOffset))
 }
 func (p *PartHull) update(v *Vehicle, n *PartNode, dt float32) {
@@ -85,8 +85,8 @@ type PartCtrl struct {
 	PartBase
 }
 
-func (p *PartCtrl) draw(model *Matrix4, offset *Vec3) {
-	modelOffset := NewMatrix4Pos(*offset)
+func (p *PartCtrl) draw(model *Mat4, offset *Vec3) {
+	modelOffset := NewMat4Pos(*offset)
 	p.drawModel(model.Mul(modelOffset))
 }
 func (p *PartCtrl) update(v *Vehicle, n *PartNode, dt float32) {
@@ -98,8 +98,8 @@ type PartDecoup struct {
 	IsUsed bool
 }
 
-func (p *PartDecoup) draw(model *Matrix4, offset *Vec3) {
-	modelOffset := NewMatrix4Pos(*offset)
+func (p *PartDecoup) draw(model *Mat4, offset *Vec3) {
+	modelOffset := NewMat4Pos(*offset)
 	p.drawModel(model.Mul(modelOffset))
 }
 func (p *PartDecoup) update(v *Vehicle, n *PartNode, dt float32) {
@@ -125,8 +125,8 @@ type PartEngine struct {
 	FuelMass float32
 }
 
-func (p *PartEngine) draw(model *Matrix4, offset *Vec3) {
-	modelOffset := NewMatrix4Pos(*offset)
+func (p *PartEngine) draw(model *Mat4, offset *Vec3) {
+	modelOffset := NewMat4Pos(*offset)
 	local := model.Mul(modelOffset)
 	p.drawModel(local)
 	p.Plume.draw(*local)
@@ -177,14 +177,14 @@ type PartChute struct {
 	Radius       float32
 }
 
-func (p *PartChute) draw(model *Matrix4, offset *Vec3) {
-	modelOffset := NewMatrix4Pos(*offset)
+func (p *PartChute) draw(model *Mat4, offset *Vec3) {
+	modelOffset := NewMat4Pos(*offset)
 	local := model.Mul(modelOffset)
 	p.drawModel(local)
 	r := p.Radius
 	h := p.Height
-	p.ChuteAntiRot.Apply()
-	p.ChuteRot.Conj().Apply()
+	p.ChuteAntiRot.ToMat4()
+	p.ChuteRot.Conj().ToMat4()
 	local.Scale3(Vec3{r, r, h})
 	if p.IsActive && !p.IsCut {
 		p.ChuteGeom.draw(local)

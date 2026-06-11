@@ -51,13 +51,18 @@ func (v *Vec3) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	v.fromArray(*val)
+	v.FromArray(*val)
 	return nil
 }
-func (v *Vec3) fromArray(val [3]float32) {
+func (v *Vec3) FromArray(val [3]float32) {
 	v.X = val[0]
 	v.Y = val[1]
 	v.Z = val[2]
+}
+func (v *Vec3) From(u Vec3) {
+	v.X = u.X
+	v.Y = u.Y
+	v.Z = u.Z
 }
 func (v Vec3) LenSq() float32 {
 	return v.X*v.X + v.Y*v.Y + v.Z*v.Z
@@ -72,6 +77,11 @@ func (v Vec3) AxisLenSq() Vec3 {
 }
 func (v Vec3) Add(u Vec3) Vec3 {
 	return Vec3{v.X + u.X, v.Y + u.Y, v.Z + u.Z}
+}
+func (v *Vec3) AddSelf(u Vec3) {
+	v.X += u.X
+	v.Y += u.Y
+	v.Z += u.Z
 }
 func (v Vec3) AddSca(k float32) Vec3 {
 	return Vec3{v.X + k, v.Y + k, v.Z + k}
@@ -92,6 +102,9 @@ func (v Vec3) Mul(u Vec3) Vec3 {
 }
 func (v Vec3) MulSca(k float32) Vec3 {
 	return Vec3{v.X * k, v.Y * k, v.Z * k}
+}
+func (v Vec3) Invert() Vec3 {
+	return Vec3{-v.X, -v.Y, -v.Z}
 }
 func (v Vec3) Div(u Vec3) Vec3 {
 	x, y, z := float32(0.0), float32(0.0), float32(0.0)
@@ -147,6 +160,11 @@ func (v Vec3) Ortho() Vec3 {
 }
 func (v Vec3) To4(w float32) Vec4 {
 	return Vec4{v.X, v.Y, v.Z, w}
+}
+func (v *Vec3) SetZero() {
+	v.X = 0
+	v.Y = 0
+	v.Z = 0
 }
 func (v Vec3) uniform(location int32) {
 	gl.Uniform3f(location, v.X, v.Y, v.Z)
@@ -217,6 +235,26 @@ func (v Vec4) uniform(location int32) {
 	gl.Uniform4f(location, v.X, v.Y, v.Z, v.W)
 }
 
+func Sinf(x float32) float32 {
+	return float32(math.Sin(float64(x)))
+}
+
+func Cosf(x float32) float32 {
+	return float32(math.Cos(float64(x)))
+}
+
+func Asinf(x float32) float32 {
+	return float32(math.Asin(float64(x)))
+}
+
+func Atan2f(y, x float32) float32 {
+	return float32(math.Atan2(float64(y), float64(x)))
+}
+
+func Sqrtf(x float32) float32 {
+	return float32(math.Sqrt(float64(x)))
+}
+
 func Absf(x float32) float32 {
 	return float32(math.Abs(float64(x)))
 }
@@ -243,4 +281,8 @@ func Clampf(x float32, min, max float32) float32 {
 		return max
 	}
 	return x
+}
+
+func ToRad(deg float32) float32 {
+	return deg / 180 * math.Pi
 }

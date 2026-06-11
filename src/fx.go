@@ -38,7 +38,7 @@ type Plume struct {
 	def       *PlumeDef
 }
 
-func (p *Plume) draw(model Matrix4) {
+func (p *Plume) draw(model Mat4) {
 	p.shader.active()
 	uPMatrix := p.shader.getUniform("u_PMatrix")
 	uVMatrix := p.shader.getUniform("u_VMatrix")

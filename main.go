@@ -25,67 +25,66 @@ const (
 	PlayMode
 )
 
-var pause bool
+var pause bool = true
 var focusIndex uint
-var mainVehicle *rkt.Vehicle
+var camera *rkt.Camera
+
+// var mainVehicle *rkt.Vehicle
+var airplane *rkt.L39
 var speedup int8 = 4
 var radius float32 = 10
+var radiusCh float32
 
-const ctrlSpeed = 0.4
+var pitch, roll, yaw, throttle float32
+var pitchCh, rollCh, yawCh, throttleCh float32
 
-func ctrlVector(axis rkt.VecAxis, scale float32) rkt.Vec3 {
-	comp := 1.0 * scale
-	switch axis {
-	case rkt.XAxis:
-		return rkt.Vec3{X: comp, Y: 0.0, Z: 0.0}
-	case rkt.YAxis:
-		return rkt.Vec3{X: 0.0, Y: comp, Z: 0.0}
-	case rkt.ZAxis:
-		return rkt.Vec3{X: 0.0, Y: 0.0, Z: comp}
-	}
+type onKeyAction func(w *glfw.Window)
 
-	return rkt.Vec3{}
+var onKeyPressMap = map[glfw.Key]onKeyAction{
+	glfw.KeyEscape:       func(w *glfw.Window) { w.SetShouldClose(true) },
+	glfw.KeyP:            func(_ *glfw.Window) { pause = !pause },
+	glfw.KeyLeftBracket:  func(_ *glfw.Window) { radiusCh = -0.8 },
+	glfw.KeyRightBracket: func(_ *glfw.Window) { radiusCh = +1.0 },
+	glfw.KeyEqual:        func(_ *glfw.Window) { throttleCh = +1.0 },
+	glfw.KeyMinus:        func(_ *glfw.Window) { throttleCh = -1.0 },
+	glfw.KeyA:            func(_ *glfw.Window) { rollCh = +1.0 },
+	glfw.KeyD:            func(_ *glfw.Window) { rollCh = -1.0 },
+	glfw.KeyW:            func(_ *glfw.Window) { pitchCh = +1.0 },
+	glfw.KeyS:            func(_ *glfw.Window) { pitchCh = -1.0 },
+	glfw.KeyX:            func(_ *glfw.Window) { yawCh = +1.0 },
+	glfw.KeyZ:            func(_ *glfw.Window) { yawCh = -1.0 },
+	glfw.KeyF2:           func(_ *glfw.Window) { camera.ToOrbit() },
+	glfw.KeyF3:           func(_ *glfw.Window) { camera.ToFlyBy() },
+	glfw.KeyF4:           func(_ *glfw.Window) { camera.ToFixed() },
+}
+
+var onKeyReleaseMap = map[glfw.Key]onKeyAction{
+	glfw.KeyEqual:        func(_ *glfw.Window) { throttleCh = 0.0 },
+	glfw.KeyMinus:        func(_ *glfw.Window) { throttleCh = 0.0 },
+	glfw.KeyLeftBracket:  func(_ *glfw.Window) { radiusCh = 0.0 },
+	glfw.KeyRightBracket: func(_ *glfw.Window) { radiusCh = 0.0 },
+	glfw.KeyA:            func(_ *glfw.Window) { rollCh = 0.0 },
+	glfw.KeyD:            func(_ *glfw.Window) { rollCh = 0.0 },
+	glfw.KeyW:            func(_ *glfw.Window) { pitchCh = 0.0 },
+	glfw.KeyS:            func(_ *glfw.Window) { pitchCh = 0.0 },
+	glfw.KeyX:            func(_ *glfw.Window) { yawCh = 0.0 },
+	glfw.KeyZ:            func(_ *glfw.Window) { yawCh = 0.0 },
 }
 
 func onKey(w *glfw.Window, key glfw.Key, sc int, act glfw.Action, mods glfw.ModifierKey) {
-	if act == glfw.Press {
-		switch key {
-		case glfw.KeyEscape:
-			w.SetShouldClose(true)
-		case glfw.KeyP:
-			pause = !pause
-		case glfw.KeySpace:
-			mainVehicle.ApplyStage()
-		case glfw.KeyBackspace:
-			radius = 10.0
-		case glfw.KeyEqual:
-			radius *= 0.7
-		case glfw.KeyMinus:
-			radius *= 1.2
-		case glfw.KeyA:
-			mainVehicle.Ang = mainVehicle.Ang.Add(mainVehicle.Rot.Rotate(ctrlVector(rkt.XAxis, +ctrlSpeed)))
-		case glfw.KeyD:
-			mainVehicle.Ang = mainVehicle.Ang.Add(mainVehicle.Rot.Rotate(ctrlVector(rkt.XAxis, -ctrlSpeed)))
-		case glfw.KeyW:
-			mainVehicle.Ang = mainVehicle.Ang.Add(mainVehicle.Rot.Rotate(ctrlVector(rkt.YAxis, -ctrlSpeed)))
-		case glfw.KeyS:
-			mainVehicle.Ang = mainVehicle.Ang.Add(mainVehicle.Rot.Rotate(ctrlVector(rkt.YAxis, +ctrlSpeed)))
-		case glfw.KeyQ:
-			mainVehicle.Ang = mainVehicle.Ang.Add(mainVehicle.Rot.Rotate(ctrlVector(rkt.ZAxis, -ctrlSpeed*10)))
-		case glfw.KeyE:
-			mainVehicle.Ang = mainVehicle.Ang.Add(mainVehicle.Rot.Rotate(ctrlVector(rkt.ZAxis, +ctrlSpeed*10)))
-		case glfw.KeyF2:
-			focusIndex = (focusIndex + 1) % rkt.VehiclesIndex
-		case glfw.KeyComma:
-			if speedup > 1 {
-				speedup /= 2
-			}
-		case glfw.KeyPeriod:
-			if speedup < 32 {
-				speedup *= 2
-			}
+	switch act {
+	case glfw.Press:
+		actFunc, ok := onKeyPressMap[key]
+		if ok {
+			actFunc(w)
+		}
+	case glfw.Release:
+		actFunc, ok := onKeyReleaseMap[key]
+		if ok {
+			actFunc(w)
 		}
 	}
+
 }
 
 const scale = 3
@@ -122,27 +121,6 @@ func main() {
 	gl.ClearDepth(1.0)
 
 	gl.Enable(gl.PROGRAM_POINT_SIZE)
-
-	// fog := [4]float32{0.2, 0.7, 0.8, 0.0}
-	// gl.Enable(gl.FOG)
-	// gl.Fogi(gl.FOG_MODE, gl.LINEAR)
-	// gl.Fogi(gl.FOG_COORD_SRC, gl.FRAGMENT_DEPTH)
-	// gl.Fogfv(gl.FOG_COLOR, &fog[0])
-	// gl.Fogf(gl.FOG_DENSITY, 0.05)
-	// gl.Hint(gl.FOG_HINT, gl.NICEST)
-	// gl.Fogf(gl.FOG_START, 1.0)
-	// gl.Fogf(gl.FOG_END, 5000.0)
-
-	// fp, _ := os.Open("bmlcube.bml")
-	// bml, err := rkt.ReadBML(fp)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// } else {
-	// 	log.Println(bml.Header.ElemCount)
-	// 	log.Println(bml.Header.Externs)
-	// 	log.Println(bml.Header.Attribs)
-	// }
-
 	gl.Enable(gl.BLEND)
 	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
@@ -158,7 +136,8 @@ func main() {
 	hud := rkt.NewHud()
 	hud.SetViewport(w, h)
 
-	camera := rkt.NewCamera(1.0, 8000.0, 10.0)
+	rkt.InitCamera()
+	camera = rkt.NewCamera(1.0, 8000.0, 10.0)
 	camera.SetViewport(w, h)
 	camera.CaptureMouse(window)
 
@@ -172,33 +151,14 @@ func main() {
 
 	radius = 10.0
 
-	mainVehicle = rkt.NewVehicle("test", rkt.NewPart("base/pod10"))
-	p := mainVehicle.Parts
-	mainVehicle.AttachAbove(p, rkt.NewPart("base/chute05"))
-	mainVehicle.AddStage()
-	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/decoup10"))
-	mainVehicle.AddStage()
-	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/solid101"))
-	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/decoup10"))
-	mainVehicle.AddStage()
-	p = mainVehicle.AttachBelow(p, rkt.NewPart("base/solid101"))
-	// p = mainVehicle.AttachBelow(p, rkt.NewPart("base/decoup10"))
-	// mainVehicle.AddStage()
-	// p = mainVehicle.AttachBelow(p, rkt.NewPart("base/solid102"))
-	// p = mainVehicle.AttachBelow(p, rkt.NewPart("base/decoup10"))
-	// mainVehicle.AddStage()
-	// p = mainVehicle.AttachBelow(p, rkt.NewPart("base/adapt1015"))
-	// p = mainVehicle.AttachBelow(p, rkt.NewPart("base/solid153"))
-	mainVehicle.Link()
-
-	camera.Target = mainVehicle
+	airplane = rkt.NewL39()
+	airplane.Pos.Z = 100.0
+	airplane.Vel.X = 100.0
 
 	patch00 := rkt.NewPatch("base/patch/00")
 	patch00.Scale = 1600.0
-	// patchInf := rkt.NewPatch("base/patch/inf")
-	// patchInf.Scale = 1600.0
 
-	t := time.Time{}.Add(time.Hour * 5)
+	t := time.Time{}.Add(time.Hour * 14)
 
 	rkt.InitDraw()
 	rkt.SetLineColor(1.0, 0.0, 0.0)
@@ -206,7 +166,43 @@ func main() {
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 		camera.Radius = radius
-		camera.Target = rkt.Vehicles[focusIndex]
+		camera.Target = &airplane.RigidBody
+
+		dt := time.Millisecond * 25
+		dtf := float32(dt.Seconds())
+
+		radius *= 1.0 + radiusCh*dtf
+		if !pause {
+			pitch += pitchCh * dtf
+			pitch = rkt.Clampf(pitch, -1.0, +1.0)
+			yaw += yawCh * dtf
+			yaw = rkt.Clampf(yaw, -1.0, +1.0)
+			throttle += throttleCh * dtf
+			throttle = rkt.Clampf(throttle, 0.0, +1.0)
+			if rollCh != 0.0 {
+				roll += rollCh * dtf
+				roll = rkt.Clampf(roll, -1.0, +1.0)
+			} else {
+				if roll < -0.5 {
+					roll += dtf
+				}
+				if roll > +0.5 {
+					roll -= dtf
+				}
+			}
+			airplane.Wings[2].SetDeflection(-roll)
+			airplane.Wings[3].SetDeflection(+roll)
+			airplane.Wings[4].SetDeflection(+pitch)
+			airplane.Wings[5].SetDeflection(+pitch)
+			airplane.Wings[6].SetDeflection(+yaw)
+			airplane.Engine.Throttle = throttle
+
+			airplane.Update(dtf)
+			log.Printf("v = %3.0f km/h    h = %5.0f m\n", airplane.Vel.Len()*3.6, airplane.Pos.Z)
+
+			t = t.Add(dt * 60)
+			rkt.ActiveLightEnv.SetFromExtern(t, rkt.Vec3{})
+		}
 
 		x, y := window.GetCursorPos()
 		mousePos := rkt.Vec2{X: float32(x), Y: float32(y)}
@@ -214,29 +210,15 @@ func main() {
 		camera.Update(mousePos)
 		rkt.ActivePV = &camera.PVMatrix
 
-		dt := time.Millisecond * 25
-
 		gl.DepthFunc(gl.LEQUAL)
 		sky.Draw()
 		gl.DepthFunc(gl.LESS)
 
 		patch00.Draw()
-		// patchInf.Draw()
-		for _, v := range rkt.Vehicles {
-			if v == nil {
-				break
-			}
-			v.Draw()
-			if !pause {
-				v.Update(float32(dt.Seconds()) * float32(speedup) / 4)
-			}
-		}
-
-		t = t.Add(400 * dt)
-		rkt.ActiveLightEnv.SetFromExtern(t, rkt.Vec3{})
+		airplane.Draw()
 
 		rkt.ActivePV = &hud.PVMatrix
-		hud.Draw(mainVehicle.Rot)
+		hud.Draw(airplane.Rot, rkt.Vec4{X: pitch, Y: roll, Z: yaw, W: throttle})
 
 		time.Sleep(dt)
 
